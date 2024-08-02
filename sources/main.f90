@@ -1,480 +1,767 @@
-program main
+ Program main
     use sort
 
-    implicit none
+    implicit none 
+    
+    integer :: allocerr,samples,inf,sup
+    real(kind=8) :: fxk,fxtrial,ti,sigma
+    real(kind=8), allocatable :: xtrial(:),faux(:),indices(:),nu_l(:),nu_u(:),opt_cond(:),&
+                                 xstar(:),y(:),data(:,:),t(:)
+    integer, allocatable :: Idelta(:),outliers(:)
+    
+    ! LOCAL SCALARS
+    logical :: checkder
+    integer :: hnnzmax,inform,jcnnzmax,m,n,nvparam
+    real(kind=8) :: cnorm,efacc,efstain,eoacc,eostain,epsfeas,epsopt,f,nlpsupn,snorm
 
-    type :: pdata_type
-        integer :: counters(2) = 0
-        integer :: samples,inf,sup,lovo_order,dim_Imin,n_train,n_test
-        real(kind=8) :: sigma,theta
-        real(kind=8), allocatable :: c(:),xtrial(:),xk(:),t(:),y(:),t_test(:),y_test(:),data(:,:),indices(:),sp_vector(:),&
-        grad_sp(:),gp(:),lbnd(:),ubnd(:),hess_sp(:,:),eig_hess_sp(:),aux_mat(:,:),aux_vec(:)
-        integer, allocatable :: outliers(:)
-        character(len=1) :: JOBZ,UPLO ! lapack variables
-        integer :: LDA,LWORK,INFO,NRHS,LDB ! lapack variables
-        real(kind=8), allocatable :: WORK(:),IPIV(:) ! lapack variables
-    end type pdata_type
+    ! LOCAL ARRAYS
+    character(len=80) :: specfnm,outputfnm,vparam(10) 
+    logical :: coded(11)
+    real(kind=8),   pointer :: l(:),u(:),x(:),xk(:),grad(:,:)
 
-    type(pdata_type), target :: pdata
+    logical,        pointer :: equatn(:),linear(:)
+    real(kind=8),   pointer :: lambda(:)
 
-    integer :: allocerr,i,n
+    integer :: i
+    real(kind=8), dimension(3,3) :: solutions
 
-    character(len=128) :: pwd
-    call get_environment_variable('PWD',pwd)
+    ! Reading data and storing it in the variables t and y
+    Open(Unit = 100, File = "output/seropositives.txt", ACCESS = "SEQUENTIAL")
+
+    ! Set parameters
+    read(100,*) samples
 
     n = 4
 
-    ! lapack variables
-    pdata%JOBZ = 'N'
-    pdata%UPLO = 'U'
-    pdata%LDA = n
-    pdata%LDB = n
-    pdata%LWORK = 3*n - 1
-    pdata%NRHS = 1
-    
-    Open(Unit = 10, File = trim(pwd)//"/../data/cubic.txt", Access = "SEQUENTIAL")
+    allocate(t(samples),y(samples),x(n),xk(n-1),xtrial(n-1),l(n),u(n),xstar(n-1),data(5,samples),&
+    faux(samples),indices(samples),Idelta(samples),nu_l(n-1),nu_u(n-1),opt_cond(n-1),stat=allocerr)
 
-    read(10,*) pdata%samples
-
-    pdata%n_train = pdata%samples - 20
-    pdata%n_test = pdata%samples - pdata%n_train
-
-    allocate(pdata%c(n),pdata%xtrial(n),pdata%xk(n),pdata%t(pdata%n_train),pdata%y(pdata%n_train),&
-    pdata%indices(pdata%n_train),pdata%sp_vector(pdata%n_train),pdata%grad_sp(n),pdata%gp(n),&
-    pdata%data(2,pdata%samples),pdata%t_test(pdata%n_test),pdata%y_test(pdata%n_test),stat=allocerr)
-
-    if ( allocerr .ne. 0 ) then
-        write(*,*) 'Allocation error.'
-        stop
-    end if
-
-    allocate(pdata%hess_sp(n,n),pdata%eig_hess_sp(n),pdata%WORK(pdata%LWORK),pdata%aux_mat(n,n),&
-    pdata%aux_vec(n),pdata%IPIV(n),stat=allocerr)
-
-    if ( allocerr .ne. 0 ) then
-        write(*,*) 'Allocation error.'
-        stop
-    end if
-
-    do i = 1, pdata%samples
-        read(10,*) pdata%data(:,i)
-    enddo
-
-    close(10)
-
-    pdata%c(:) = (/1.d0,1.d0,-3.d0,1.d0/)
-  
-    pdata%t(1:pdata%n_train) = pdata%data(1,1:pdata%n_train)
-    pdata%y(1:pdata%n_train) = pdata%data(2,1:pdata%n_train)
-
-    pdata%t_test(:) = pdata%data(1,1+pdata%n_train:)
-    pdata%y_test(:) = pdata%data(2,1+pdata%n_train:)
-
-    pdata%inf = 0
-    pdata%sup = 10
- 
-    allocate(pdata%outliers(pdata%n_train*(pdata%sup-pdata%inf+1)),stat=allocerr)
- 
     if ( allocerr .ne. 0 ) then
         write(*,*) 'Allocation error in main program'
         stop
     end if
- 
-    pdata%outliers(:) = 0
 
-    call mixed_test(n,pdata)
-
-    Open(Unit = 10, File =trim(pwd)//"/../output/outliers.txt", ACCESS = "SEQUENTIAL")
-
-    write(10,100) pdata%sup
-
-    do i = 1, pdata%sup
-        write(10,100) pdata%outliers(i)
+    do i = 1, samples
+        read(100,*) data(:,i)
     enddo
 
-    100 format (I2)
+    close(100)
 
-    contains
+    ! Coded subroutines
+    coded(1:6)  = .true.  ! evalf, evalg, evalh, evalc, evaljac, evalhc
+    coded(7:11) = .false. ! evalfc,evalgjac,evalgjacp,evalhl,evalhlp
 
-    subroutine mixed_test(n,pdata)
+    ! Upper bounds on the number of sparse-matrices non-null elements
+    jcnnzmax = 10000
+    hnnzmax  = 10000
+
+    ! Checking derivatives?
+    checkder = .false.
+
+    ! Parameters setting
+    epsfeas   = 1.0d-08
+    epsopt    = 1.0d-08
+  
+    efstain   = sqrt( epsfeas )
+    eostain   = epsopt ** 1.5d0
+  
+    efacc     = sqrt( epsfeas )
+    eoacc     = sqrt( epsopt )
+
+    outputfnm = ''
+    specfnm   = ''
+
+    nvparam   = 0
+    vparam(1) = 'ITERATIONS-OUTPUT-DETAIL 0' 
+
+    l(1:n-1) = 0.0d0; l(n) = -1.0d+20
+    u(1:n-1) = 1.0d+20; u(n) = 0.0d0
+
+    ! Number of days
+    t(:) = data(1,:) ! Initial point
+    ! t(:) = data(5,:) ! Midpoint
+    inf = 1
+    sup = 10
+
+    allocate(outliers(3*samples*(sup-inf+1)),stat=allocerr)
+
+    if ( allocerr .ne. 0 ) then
+        write(*,*) 'Allocation error in main program'
+        stop
+    end if
+
+    outliers(:) = 0
+
+    call mixed_test(inf,sup,outliers,t,y,indices,Idelta,samples,m,n,xtrial)
+
+    call export(xtrial,outliers,sup)
+
+    CONTAINS
+
+    subroutine mixed_test(out_inf,out_sup,outliers,t,y,indices,Idelta,samples,m,n,xtrial)
         implicit none
-  
-        integer, intent(in) :: n
-        integer :: noutliers,i
-        real(kind=8) :: fobj,start,finish,ti,pred,av_err_train,av_err_test,norm_bkj
-        type(pdata_type), intent(inout) :: pdata
 
-        Open(Unit = 100, File = trim(pwd)//"/../output/solution_cubic.txt", ACCESS = "SEQUENTIAL")
-        Open(Unit = 200, File = trim(pwd)//"/../output/log_sp.txt", ACCESS = "SEQUENTIAL")
-        Open(Unit = 300, File = trim(pwd)//"/../output/output_latex.txt", ACCESS = "SEQUENTIAL")
+        integer,        intent(in) :: samples,n,out_inf,out_sup
+        real(kind=8),   intent(in) :: t(samples)
+        integer,        intent(inout) :: Idelta(samples),outliers(3*samples*(sup-inf+1)),m
+        real(kind=8),   intent(inout) :: indices(samples),xtrial(n-1),y(samples)
 
-        pdata%xk(:) = 0.0d0
-        do noutliers = pdata%inf, pdata%sup
-            
-            ! Initial solution by Least Squares
-            if (noutliers .ne. 0) then
-                pdata%xk(:) = 0.0d0
-                call lovo_algorithm(n,0,pdata%outliers,pdata,.false.,fobj,norm_bkj)
-            endif
+        integer :: noutliers,q,iterations,ind,n_eval
+        real(kind=8) :: fovo,delta,sigmin,gamma,start,finish
 
+        print*
+        Print*, "OVO Algorithm for Measles"
+
+        y(:) = data(2,:)
+
+        do noutliers = out_inf,out_sup
             call cpu_time(start)
-            call lovo_algorithm(n,noutliers,pdata%outliers,pdata,.true.,fobj,norm_bkj)
+            q = samples - noutliers
+
+            print*
+            write(*,1100) "Number of outliers: ",noutliers
+            ! xk(:) = 1.0d-1
+            xk(:) = (/0.197d0,0.287d0,0.021d0/)
+
+            ind = 1
+            delta = 5.0d-4
+            sigmin = 1.0d-1
+            gamma = 5.0d0
+            
+            call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial, &
+            delta,sigmin,gamma,outliers(ind:ind+noutliers-1),fovo,iterations,n_eval)
+
             call cpu_time(finish)
+            print*, "OVO function evaluations: ", n_eval
+            write(*,1111) "Execution time: ", finish - start
 
-            av_err_train = 0.d0
+            Open(Unit = 100, File = "output/solutions_mixed_measles.txt", ACCESS = "SEQUENTIAL")
+            Open(Unit = 300, File = "output/fobj_mixed_measles.txt", ACCESS = "SEQUENTIAL")
+            Open(Unit = 400, File = "output/iterations_mixed_measles.txt", ACCESS = "SEQUENTIAL")
+            Open(Unit = 600, File = "output/outliers.txt", ACCESS = "SEQUENTIAL")
 
-            do i = 1, pdata%n_train
-                ti = pdata%t(i)
-                pred = pdata%xk(1) + pdata%xk(2) * ti + pdata%xk(3) * (ti**2) + pdata%xk(4) * (ti**3)
-
-                if (.not. ANY(pdata%outliers(1:noutliers) .eq. i)) then
-                    av_err_train = av_err_train + absolute_error(pdata%y(i),pred)
-                endif
-            enddo
-
-            av_err_train = av_err_train / (pdata%n_train - noutliers)
-            av_err_test = 0.d0
-
-            do i = 1, pdata%n_test
-                ti = pdata%t_test(i)
-                pred = pdata%xk(1) + pdata%xk(2) * ti + pdata%xk(3) * (ti**2) + pdata%xk(4) * (ti**3)
-                av_err_test = av_err_test + absolute_error(pdata%y_test(i),pred)
-            enddo
-
-            av_err_test = av_err_test / pdata%n_test
-
-            write(100,1000) pdata%xk(1),pdata%xk(2),pdata%xk(3),pdata%xk(4)
-            write(200,'(ES13.6)') fobj
-            write(300,'(8F7.3)') pdata%xk,fobj,maxval(abs(pdata%c(:) - pdata%xk(:))),av_err_train,av_err_test
-  
-            pdata%counters(:) = 0
-           
+            write(100,1000) xtrial(1), xtrial(2), xtrial(3)
+            write(300,*) fovo
+            write(400,*) iterations
+            
         enddo
-  
-        Open(Unit = 500, File = trim(pwd)//"/../output/num_mixed_test.txt", ACCESS = "SEQUENTIAL")
-        write(500,'(I2)') pdata%inf
-        write(500,'(I2)') pdata%sup
-  
-        1000 format (ES13.6,1X,ES13.6,1X,ES13.6,1X,ES13.6)
+
+        print*
+        Print*, "OVO Algorithm for Mumps"
+
+        y(:) = data(3,:)
+
+        do noutliers = out_inf,out_sup
+            call cpu_time(start)
+            q = samples - noutliers
+            print*
+            write(*,1100) "Number of outliers: ",noutliers
+            ! xk(:) = 1.0d-1
+            xk(:) = (/0.156d0,0.250d0,0.0d0/)
+
+            ind = ind + noutliers
+            ! delta = 5.0d-4
+            ! sigmin = 1.0d-1
+            ! gamma = 5.0d0
+
+            call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial, &
+            delta,sigmin,gamma,outliers(ind:ind+noutliers-1),fovo,iterations,n_eval)
+
+            call cpu_time(finish)
+            print*, "OVO function evaluations: ", n_eval
+            write(*,1111) "Execution time: ", finish - start
+
+            Open(Unit = 110, File = "output/solutions_mixed_mumps.txt", ACCESS = "SEQUENTIAL")
+            Open(Unit = 310, File = "output/fobj_mixed_mumps.txt", ACCESS = "SEQUENTIAL")
+            Open(Unit = 410, File = "output/iterations_mixed_mumps.txt", ACCESS = "SEQUENTIAL")
+
+            write(110,1000) xtrial(1), xtrial(2), xtrial(3)
+            write(310,*) fovo
+            write(410,*) iterations
+        enddo
+
+        print*
+        Print*, "OVO Algorithm for Rubella"
+
+        y(:) = data(4,:)
+
+        do noutliers = out_inf,out_sup
+            call cpu_time(start)
+            q = samples - noutliers
+            print*
+            write(*,1100) "Number of outliers: ",noutliers
+            ! xk(:) = 1.0d-1
+            xk(:) = (/0.0628d0,0.178d0,0.020d0/)
+
+            ind = ind + noutliers
+
+            ! delta = 1.0d-3
+            ! sigmin = 1.0d-1
+            ! gamma = 2.0d0
+
+            call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial, &
+            delta,sigmin,gamma,outliers(ind:ind+noutliers-1),fovo,iterations,n_eval)
+
+            call cpu_time(finish)
+            print*, "OVO function evaluations: ", n_eval
+            write(*,1111) "Execution time: ", finish - start
+
+            Open(Unit = 120, File = "output/solutions_mixed_rubella.txt", ACCESS = "SEQUENTIAL")
+            Open(Unit = 320, File = "output/fobj_mixed_rubella.txt", ACCESS = "SEQUENTIAL")
+            Open(Unit = 420, File = "output/iterations_mixed_rubella.txt", ACCESS = "SEQUENTIAL")
+
+            write(120,1000) xtrial(1), xtrial(2), xtrial(3)
+            write(320,*) fovo
+            write(420,*) iterations
+    
+        enddo
+        
+        Open(Unit = 500, File = "output/num_mixed_test.txt", ACCESS = "SEQUENTIAL")
+        write(500,1200) out_inf
+        write(500,1200) out_sup
+        
+        1000 format (ES12.6,1X,ES12.6,1X,ES12.6)
+        1100 format (1X,A20,I2)
+        1200 format (I2)
+        1111 format (A16,2X,F4.2)
 
         close(100)
-        close(200)
-  
+        close(110)
+        close(120)
+        close(300)
+        close(310)
+        close(320)
+        close(500)
+        
     end subroutine mixed_test
 
-    subroutine lovo_algorithm(n,noutliers,outliers,pdata,type_test,fobj,norm_bkj)
+    !==============================================================================
+    ! MAIN ALGORITHM
+    !==============================================================================
+    subroutine ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial, &
+                             delta,sigmin,gamma,outliers,fovo,iterations,n_eval)
         implicit none
-        
-        logical, intent(in) :: type_test
-        integer, intent(in) :: n,noutliers
-        integer, intent(inout) :: outliers(noutliers)
-        real(kind=8), intent(out) :: fobj,norm_bkj
-        type(pdata_type), intent(inout) :: pdata
-  
-        real(kind=8) :: sigmin,epsilon,fxk,fxtrial,alpha,gamma,termination,aux
-        integer :: iter_lovo,iter_sub_lovo,max_iter_lovo,max_iter_sub_lovo
-  
-        sigmin = 1.0d-1
-        gamma = 1.d+1
+
+        integer,        intent(in) :: q,noutliers,samples,n
+        real(kind=8),   intent(in) :: t(samples),y(samples),delta,sigmin,gamma
+        integer,        intent(inout) :: Idelta(samples),m
+        real(kind=8),   intent(inout) :: indices(samples),xtrial(n-1),fovo
+        integer,        intent(inout) :: outliers(noutliers),iterations,n_eval
+
+        integer, parameter  :: max_iter = 10000, max_iter_sub = 100, kflag = 2
+        integer             :: iter,iter_sub,i,j
+        real(kind=8)        :: gaux1,gaux2,a,b,c,ebt,terminate,alpha,epsilon
+
+        alpha   = 1.0d-8
         epsilon = 1.0d-4
-        alpha = 1.0d-8
-        max_iter_lovo = 100
-        max_iter_sub_lovo = 100
-        iter_lovo = 0
-        iter_sub_lovo = 0
-        pdata%lovo_order = pdata%n_train - noutliers
-  
-        call compute_sp(n,pdata%xk,pdata,fxk)      
+        iter    = 0 
         
-        if (type_test) then
-            write(*,*)
-            write(*,*) "Outliers: ", noutliers
-            write(*,*) "--------------------------------------------------------"
-            write(*,10) "#iter","#init","Sp(xstar)","Stop criteria","#Imin"
-            10 format (2X,A5,4X,A5,6X,A9,6X,A13,2X,A5)
-            write(*,*) "--------------------------------------------------------"
-        endif
-  
+        indices(:) = (/(i, i = 1, samples)/)
+    
+        ! Scenarios
+        do i = 1, samples
+            call fi(xk,i,n,t,y,samples,faux(i))
+        end do
+    
+        ! Sorting
+        call DSORT(faux,indices,samples,kflag)
+
+        ! q-Order-Value function 
+        fxk = faux(q)
+        n_eval = 1
+
+        call mount_Idelta(faux,delta,q,indices,samples,Idelta,m)
+
+        print*,"-----------------------------------------------------------------------------"
+        write(*,10) "Iterations","Inter. Iter.","Objective func.","Optimality cond.","Idelta","Sum LM"
+        10 format (2X,A11,2X,A12,2X,A15,2X,A16,2X,A6,2X,A6)
+        print*,"-----------------------------------------------------------------------------"
+
+        write(*,20)  0,"-",fxk,"-",m,"-"
+        20 format (7X,I1,13X,A1,6X,ES14.6,12X,A1,11X,I2,6X,A1)
+
         do
-            iter_lovo = iter_lovo + 1
+            iter = iter + 1
     
-            call compute_grad_sp(n,pdata%xk,pdata,pdata%grad_sp)
-            call compute_Bkj(n,pdata)
-
-            if (iter_lovo .eq. 1) then
-                norm_bkj = frobenius(pdata%hess_sp,n,n)
-            else
-                aux = frobenius(pdata%hess_sp,n,n)
-                if (norm_bkj .lt. aux) norm_bkj = aux
-            endif
+            allocate(equatn(m),linear(m),lambda(m),grad(m,n-1),stat=allocerr)
     
-            termination = norm2(pdata%grad_sp(1:n))
-            
-            if (type_test) then
-                write(*,20)  iter_lovo,iter_sub_lovo,fxk,termination,pdata%dim_Imin
-                20 format (I6,5X,I4,4X,ES14.6,3X,ES14.6,2X,I2)
-            endif
+            if ( allocerr .ne. 0 ) then
+                write(*,*) 'Allocation error in main program'
+                stop
+            end if
     
-            if (termination .le. epsilon) exit
-            if (iter_lovo .ge. max_iter_lovo) exit
-            
-            iter_sub_lovo = 1
-            pdata%sigma = 0.d0
+            equatn(:) = .false.
+            linear(:) = .false.
+            lambda(:) = 0.0d0
+    
+            a = xk(1)
+            b = xk(2)
+            c = xk(3)
 
-            do                 
-                call compute_xtrial(n,pdata)
+            do i = 1, m
+                ti = t(Idelta(i))
 
-                ! pdata%xtrial(:) = pdata%xk(:) - (1.d0 / pdata%sigma) * pdata%grad_sp(:)
-                call compute_sp(n,pdata%xtrial,pdata,fxtrial)
+                ebt = exp(-b * ti)
 
-                if (fxtrial .le. (fxk - alpha * norm2(pdata%xtrial(1:n) - pdata%xk(1:n))**2)) exit
-                if (iter_sub_lovo .ge. max_iter_sub_lovo) exit
+                call model(xk,Idelta(i),n,t,samples,gaux1)
 
-                pdata%sigma = max(sigmin,gamma * pdata%sigma)
-                iter_sub_lovo = iter_sub_lovo + 1
+                gaux1 = y(Idelta(i)) - gaux1
 
+                gaux2 = (a / b) * ti * ebt + (1.0d0 / b) * ((a / b) - c) * (ebt - 1.0d0) - c * ti
+
+                gaux2 = exp(gaux2)
+    
+                grad(i,1) = (1.0d0 / b**2) * (ebt * (ti * b + 1.0d0) - 1.0d0)
+    
+                grad(i,2) = ebt * ((-2.0d0 * a * ti / b**2) - ((a * ti**2) / b) - (2.0d0 * a / b**3) + &
+                            (c / b**2) + (c * ti / b)) + (2.0d0 * a / b**3) - (c / b**2)
+    
+                grad(i,3) = (1.0d0 / b) * (1.0d0 - ebt) - ti
+    
+                grad(i,:) = gaux1 * gaux2 * grad(i,:)
+            end do
+    
+            sigma = sigmin
+            iter_sub = 1
+            x(:) = (/xk(:),0.0d0/)
+    
+            ! Minimizing using ALGENCAN
+            do 
+                call algencan(myevalf,myevalg,myevalh,myevalc,myevaljac,myevalhc,   &
+                    myevalfc,myevalgjac,myevalgjacp,myevalhl,myevalhlp,jcnnzmax,    &
+                    hnnzmax,epsfeas,epsopt,efstain,eostain,efacc,eoacc,outputfnm,   &
+                    specfnm,nvparam,vparam,n,x,l,u,m,lambda,equatn,linear,coded,    &
+                    checkder,f,cnorm,snorm,nlpsupn,inform)
+
+                xtrial(1:n-1) = x(1:n-1)
+                indices(:) = (/(i, i = 1, samples)/)
+    
+                ! Scenarios
+                do i = 1, samples
+                    call fi(xtrial,i,n,t,y,samples,faux(i))
+                end do
+    
+                ! Sorting
+                call DSORT(faux,indices,samples,kflag)
+        
+                fxtrial = faux(q)
+                n_eval = n_eval + 1
+        
+                ! Test the sufficient descent condition
+                if (fxtrial .le. (fxk - alpha * norm2(xtrial(1:n-1) - xk(1:n-1))**2)) exit
+                if (iter_sub .ge. max_iter_sub) exit
+    
+                sigma = gamma * sigma
+                iter_sub = iter_sub + 1
+            end do ! End of internal iterations
+    
+            opt_cond(:) = 0.0d0
+            nu_l(:) = 0.0d0
+            nu_u(:) = 0.0d0
+    
+            do j = 1, n-1
+                if (xtrial(j) .le. l(j)) then 
+                    do i = 1, m
+                        nu_l(j) = nu_l(j) + lambda(i) * grad(i,j)
+                    end do
+                else if (xtrial(j) .ge. u(j)) then
+                    do i = 1, m
+                        nu_u(j) = nu_u(j) - lambda(i) * grad(i,j)
+                    end do
+                end if
+            end do
+    
+            do i = 1, m
+                opt_cond(:) = opt_cond(:) + lambda(i) * grad(i,:)
             enddo
-  
+    
+            opt_cond(:) = opt_cond(:) + nu_u(:) - nu_l(:)
+            terminate = norm2(opt_cond)
+            ! terminate = norm2(xk-xtrial)
+
+            write(*,30)  iter,iter_sub,fxtrial,terminate,m,sum(lambda(:))
+            30 format (2X,I6,10X,I4,6X,ES14.6,4X,ES14.6,6X,I2,5X,F3.1)
+
+            deallocate(lambda,equatn,linear,grad)
             fxk = fxtrial
-            pdata%xk(:) = pdata%xtrial(:)
-            pdata%counters(2) = iter_sub_lovo + pdata%counters(2) + 1
-  
-        enddo
-  
-        fobj = fxtrial
-        pdata%counters(1) = iter_lovo
-  
-        ! write(*,*) "--------------------------------------------------------"
+            xk(1:n-1) = xtrial(1:n-1)
 
-  
-        outliers(:) = int(pdata%indices(pdata%n_train - noutliers + 1:))
+            if (terminate .le. epsilon) exit
+            if (iter .ge. max_iter) exit
+    
+            call mount_Idelta(faux,delta,q,indices,samples,Idelta,m)
+            
+        end do ! End of Main Algorithm
+        print*,"-----------------------------------------------------------------------------"
+
+        outliers(:) = int(indices(samples - noutliers + 1:))
+        fovo = fxk
+        iterations = iter
         
-  
-    end subroutine lovo_algorithm
+    end subroutine ovo_algorithm
 
-    !*****************************************************************
-    !*****************************************************************
-
-    real(kind=8) function absolute_error(o,p)
+    !==============================================================================
+    ! EXPORT RESULT TO PLOT
+    !==============================================================================
+    subroutine export(xsol,outliers,noutliers)
         implicit none
 
-        real(kind=8) :: o,p
+        integer,        intent(in) :: noutliers,outliers(3*samples)
+        real(kind=8),   intent(in) :: xsol(n-1,n-1)
 
-        absolute_error = abs(p - o)
+        integer :: i
 
-    end function absolute_error
+        Open(Unit = 100, File = "output/solutions_ovo.txt", ACCESS = "SEQUENTIAL")
 
-    !*****************************************************************
-    !*****************************************************************
+        write(100,110) xsol(1,1), xsol(1,2), xsol(1,3)
+        write(100,110) xsol(2,1), xsol(2,2), xsol(2,3)
+        write(100,110) xsol(3,1), xsol(3,2), xsol(3,3)
 
-    real(kind=8) function frobenius(A,rows,cols)
-        implicit none
+        110 format (ES12.6,1X,ES12.6,1X,ES12.6)
+    
+        close(100)
 
-        integer :: rows,cols,i,j
-        real(kind=8) :: A(rows,cols)
+        Open(Unit = 200, File = "output/outliers.txt", ACCESS = "SEQUENTIAL")
 
-        frobenius = 0.d0
+        write(200,210) noutliers
 
-        do i = 1, rows
-            do j = 1, cols
-                frobenius = frobenius + A(i,j)**2
-            enddo
+        do i = 1, 3*noutliers
+            write(200,210) outliers(i)
         enddo
 
-        frobenius = sqrt(frobenius)
-        
-    end function frobenius
+        210 format (I2)
 
-    !*****************************************************************
-    !*****************************************************************
+        close(200)
 
-    subroutine compute_sp(n,x,pdata,res)
+    end subroutine export
+
+    !==============================================================================
+    ! MOUNT THE SET OF INDICES I(x,delta)
+    !==============================================================================
+    subroutine mount_Idelta(f,delta,q,indices,samples,Idelta,m)
         implicit none
-        integer,       intent(in) :: n
-        real(kind=8),  intent(in) :: x(n)
-        real(kind=8),  intent(out) :: res
 
-        type(pdata_type), intent(inout) :: pdata
+        integer,        intent(in) :: samples,q
+        real(kind=8),   intent(in) :: delta,f(samples),indices(samples)
+        integer,        intent(out) :: Idelta(samples),m
+        integer :: i
+        real(kind=8) :: fq
 
-        integer :: i,kflag
+        Idelta(:) = 0
+        fq = f(q)
+        m = 0
 
-        pdata%sp_vector(:) = 0.0d0
-        kflag = 2
-        pdata%indices(:) = (/(i, i = 1, pdata%n_train)/)
-
-        do i = 1, pdata%n_train
-            call fi(n,x,i,pdata,pdata%sp_vector(i))
+        do i = 1, samples
+            if (abs(fq - f(i)) .le. delta) then
+                m = m + 1
+                Idelta(m) = int(indices(i))
+            end if
         end do
 
-        ! Sorting
-        call DSORT(pdata%sp_vector,pdata%indices,pdata%n_train,kflag)
+    end subroutine
 
-        ! Lovo function
-        res = sum(pdata%sp_vector(1:pdata%lovo_order))
-
-        pdata%dim_Imin = 1
-
-        if ( pdata%sp_vector(pdata%lovo_order) .eq. pdata%sp_vector(pdata%lovo_order + 1) ) then
-            pdata%dim_Imin = 2
-        endif
-
-    end subroutine compute_sp
-
-    !*****************************************************************
-    !*****************************************************************
-
-    subroutine compute_grad_sp(n,x,pdata,res)
+    !==============================================================================
+    ! QUADRATIC ERROR OF EACH SCENARIO
+    !==============================================================================
+    subroutine fi(x,i,n,t,y,samples,res)
         implicit none
-  
-        integer,       intent(in) :: n
-        real(kind=8),  intent(in) :: x(n)
-        real(kind=8),  intent(out) :: res(n)
-        type(pdata_type), intent(in) :: pdata
-  
-        real(kind=8) :: gaux,ti
-        integer :: i
+
+        integer,        intent(in) :: n,i,samples
+        real(kind=8),   intent(in) :: x(n-1),t(samples),y(samples)
+        real(kind=8),   intent(out) :: res
         
-        res(:) = 0.0d0
-  
-        do i = 1, pdata%lovo_order
-            ti = pdata%t(int(pdata%indices(i)))
-            call model(n,x,int(pdata%indices(i)),pdata,gaux)
-            gaux = gaux - pdata%y(int(pdata%indices(i)))
-
-            res(1) = res(1) + gaux
-            res(2) = res(2) + gaux * ti
-            res(3) = res(3) + gaux * (ti**2)
-            res(4) = res(4) + gaux * (ti**3)
-        enddo
-  
-    end subroutine compute_grad_sp
-
-    !*****************************************************************
-    !*****************************************************************
-
-    subroutine compute_hess_sp(n,pdata,res)
-        implicit none
-
-        integer,       intent(in) :: n
-        real(kind=8),  intent(out) :: res(n,n)
-        type(pdata_type), intent(in) :: pdata
-
-        real(kind=8) :: ti
-        integer :: i
-
-        res(:,:) = 0.0d0
-
-        do i = 1, pdata%lovo_order
-            ti = pdata%t(int(pdata%indices(i)))
-
-            res(1,:) = res(1,:) + (/ti**0,ti**1,ti**2,ti**3/)
-            res(2,:) = res(2,:) + (/ti**1,ti**2,ti**3,ti**4/) 
-            res(3,:) = res(3,:) + (/ti**2,ti**3,ti**4,ti**5/)
-            res(4,:) = res(4,:) + (/ti**3,ti**4,ti**5,ti**6/)
-            
-        enddo
-    
-    end subroutine compute_hess_sp
-
-    !*****************************************************************
-    !*****************************************************************
-
-    subroutine compute_Bkj(n,pdata)
-        implicit none
-
-        integer,            intent(in) :: n
-        type(pdata_type),   intent(inout) :: pdata
-        real(kind=8) :: lambda_min
-
-        call compute_hess_sp(n,pdata,pdata%hess_sp)
-
-        pdata%aux_mat(:,:) = pdata%hess_sp(:,:)
-
-        call dsyev(pdata%JOBZ,pdata%UPLO,n,pdata%aux_mat,pdata%LDA,&
-        pdata%eig_hess_sp,pdata%WORK,pdata%LWORK,pdata%INFO)
-
-        lambda_min = minval(pdata%eig_hess_sp)
-        call compute_eye(n,pdata%aux_mat)
-
-        pdata%hess_sp(:,:) = pdata%hess_sp(:,:) + &
-        max(0.d0,-lambda_min + 1.d-8) * pdata%aux_mat(:,:)
-               
-    end subroutine compute_Bkj
-
-    !*****************************************************************
-    !*****************************************************************
-
-    subroutine compute_xtrial(n,pdata)
-        implicit none 
-
-        integer,            intent(in) :: n
-        type(pdata_type),   intent(inout) :: pdata
-
-        call compute_eye(n,pdata%aux_mat)
-
-        pdata%aux_mat(:,:) = pdata%hess_sp(:,:) + pdata%sigma * pdata%aux_mat(:,:)
-
-        pdata%aux_vec(:) = matmul(pdata%aux_mat(:,:),pdata%xk(:))
-        pdata%aux_vec(:) = pdata%aux_vec(:) - pdata%grad_sp(:)
-
-        call dsysv(pdata%UPLO,n,pdata%NRHS,pdata%aux_mat(:,:),pdata%LDA,pdata%IPIV,&
-        pdata%aux_vec(:),pdata%LDB,pdata%WORK,pdata%LWORK,pdata%INFO)
-
-        pdata%xtrial(:) = pdata%aux_vec(:)
-    end subroutine compute_xtrial
-
-    !*****************************************************************
-    !*****************************************************************
-
-    subroutine compute_eye(n,res)
-        implicit none
-
-        integer,        intent(in) :: n
-        real(kind=8),   intent(out):: res(n,n)
-        integer :: i
-
-        res(:,:) = 0.0d0
-
-        do i = 1, n
-            res(i,i) = 1.d0
-        enddo
-    end subroutine compute_eye
-
-    !*****************************************************************
-    !*****************************************************************
-
-    subroutine model(n,x,i,pdata,res)
-        implicit none 
-
-        integer,        intent(in) :: n,i
-        real(kind=8),   intent(in) :: x(n)
-        real(kind=8),   intent(out) :: res
-        real(kind=8) :: ti
-
-        type(pdata_type), intent(in) :: pdata
-   
-        ti = pdata%t(i)
-
-        res = x(1) + (x(2) * ti) + (x(3) * (ti**2)) + (x(4) * (ti**3))
-
-    end subroutine model
-
-    !*****************************************************************
-    !*****************************************************************
-
-    subroutine fi(n,x,i,pdata,res)
-        implicit none
-
-        integer,        intent(in) :: n,i
-        real(kind=8),   intent(in) :: x(n)
-        real(kind=8),   intent(out) :: res
-
-        type(pdata_type), intent(in) :: pdata
-
-        call model(n,x,i,pdata,res)
-        res = res - pdata%y(i)
+        call model(x,i,n,t,samples,res)
+        res = res - y(i)
         res = 0.5d0 * (res**2)
 
     end subroutine fi
+
+    !==============================================================================
+    ! MODEL TO BE FITTED TO THE DATA
+    !==============================================================================
+    subroutine model(x,i,n,t,samples,res)
+        implicit none 
+
+        integer,        intent(in) :: n,i,samples
+        real(kind=8),   intent(in) :: x(n-1),t(samples)
+        real(kind=8),   intent(out) :: res
+        real(kind=8) :: a,b,c,ti,ebt
+
+        a = x(1)
+        b = x(2)
+        c = x(3)
+        ti = t(i)
+        ebt = exp(-b * ti)
+
+        res = (a / b) * ti * ebt
+        res = res + (1.0d0 / b) * ((a / b) - c) * (ebt - 1.0d0) 
+        res = 1.0d0 - exp(res - c * ti)
+
+    end subroutine model
+
+    !==============================================================================
+    ! SUBROUTINES FOR ALGENCAN
+    !==============================================================================
+
+    !******************************************************************************
+    ! OBJECTIVE FUNCTION
+    !******************************************************************************
+    subroutine myevalf(n,x,f,flag)
+        implicit none
+
+        ! SCALAR ARGUMENTS
+        integer, intent(in) :: n
+        integer, intent(out) :: flag
+        real(kind=8), intent(out) :: f
+
+        ! ARRAY ARGUMENTS
+        real(kind=8), intent(in) :: x(n)
+
+        ! Compute objective function
+
+        flag = 0
+
+        f = x(n)
+
+    end subroutine myevalf
+
+    !******************************************************************************
+    ! GRADIENT OF THE OBJECTIVE FUNCTION
+    !******************************************************************************
+    subroutine myevalg(n,x,g,flag)
+        implicit none
+
+        ! SCALAR ARGUMENTS
+        integer, intent(in) :: n
+        integer, intent(out) :: flag
+
+        ! ARRAY ARGUMENTS
+        real(kind=8), intent(in) :: x(n)
+        real(kind=8), intent(out) :: g(n)
+
+        ! Compute gradient of the objective function
+
+        flag = 0
+
+        g(1:n-1) = 0.0d0
+        g(n)     = 1.0d0
+
+    end subroutine myevalg
+
+    !******************************************************************************
+    ! HESSIAN FOR THE OBJECTIVE FUNCTION
+    !******************************************************************************
+    subroutine myevalh(n,x,hrow,hcol,hval,hnnz,lim,lmem,flag)
+        implicit none
+
+        ! SCALAR ARGUMENTS
+        logical, intent(out) :: lmem
+        integer, intent(in) :: lim,n
+        integer, intent(out) :: flag,hnnz
+
+        ! ARRAY ARGUMENTS
+        integer, intent(out) :: hcol(lim),hrow(lim)
+        real(kind=8), intent(in)  :: x(n)
+        real(kind=8), intent(out) :: hval(lim)
+
+        ! Compute (lower triangle of the) Hessian of the objective function
+        flag = 0
+        lmem = .false.
+        hnnz = 0
+    end subroutine myevalh
+
+    !******************************************************************************
+    ! CONSTRAINTS
+    !******************************************************************************
+    subroutine myevalc(n,x,ind,c,flag)
+        implicit none
+
+        ! SCALAR ARGUMENTS
+        integer, intent(in) :: ind,n
+        integer, intent(out) :: flag
+        real(kind=8), intent(out) :: c
+
+        ! ARRAY ARGUMENTS
+        real(kind=8), intent(in) :: x(n)
+
+        ! Compute ind-th constraint
+        flag = 0
+
+        c = dot_product(x(1:n-1) - xk(1:n-1),grad(ind,1:n-1)) + &
+            (sigma * 0.5d0) * (norm2(x(1:n-1) - xk(1:n-1))**2) - x(n)
+
+    end subroutine myevalc
+
+    !******************************************************************************
+    ! JACOBIAN OF THE CONSTRAINTS
+    !******************************************************************************
+    subroutine myevaljac(n,x,ind,jcvar,jcval,jcnnz,lim,lmem,flag)
+
+        implicit none
+
+        ! SCALAR ARGUMENTS
+        logical, intent(out) :: lmem
+        integer, intent(in) :: ind,lim,n
+        integer, intent(out) :: flag,jcnnz
+
+        ! ARRAY ARGUMENTS
+        integer, intent(out) :: jcvar(lim)
+        real(kind=8), intent(in) :: x(n)
+        real(kind=8), intent(out) :: jcval(lim)
+
+        integer :: i
+
+        flag = 0
+        lmem = .false.
+
+        jcnnz = n
+
+        if ( jcnnz .gt. lim ) then
+            lmem = .true.
+            return
+        end if
+
+        jcvar(1:n) = (/(i, i = 1, n)/)
+        jcval(1:n) = (/(grad(ind,i) + sigma * (x(i) - xk(i)), i = 1, n-1), -1.0d0/)
+
+    end subroutine myevaljac
+
+    !******************************************************************************
+    ! HESSIAN OF THE CONSTRAINTS
+    !******************************************************************************
+    subroutine myevalhc(n,x,ind,hcrow,hccol,hcval,hcnnz,lim,lmem,flag)
+
+        implicit none
+
+        ! SCALAR ARGUMENTS
+        logical, intent(out) :: lmem
+        integer, intent(in) :: ind,lim,n
+        integer, intent(out) :: flag,hcnnz
+
+        ! ARRAY ARGUMENTS
+        integer, intent(out) :: hccol(lim),hcrow(lim)
+        real(kind=8), intent(in) :: x(n)
+        real(kind=8), intent(out) :: hcval(lim)
+
+        flag = 0
+        lmem = .false.
     
-end program main
+        hcnnz = n - 1
+    
+        if ( hcnnz .gt. lim ) then
+            lmem = .true.
+            return
+        end if
+    
+        hcrow(1:n-1) = (/(i, i = 1, n-1)/)
+        hccol(1:n-1) = (/(i, i = 1, n-1)/)
+        hcval(1:n-1) = sigma
+
+    end subroutine myevalhc
+
+    ! ******************************************************************
+    ! ******************************************************************
+
+    subroutine myevalfc(n,x,f,m,c,flag)
+
+        implicit none
+
+        ! SCALAR ARGUMENTS
+        integer, intent(in) :: m,n
+        integer, intent(out) :: flag
+        real(kind=8), intent(out) :: f
+
+        ! ARRAY ARGUMENTS
+        real(kind=8), intent(in) :: x(n)
+        real(kind=8), intent(out) :: c(m)
+
+        flag = - 1
+
+    end subroutine myevalfc
+
+    ! ******************************************************************
+    ! ******************************************************************
+
+    subroutine myevalgjac(n,x,g,m,jcfun,jcvar,jcval,jcnnz,lim,lmem,flag)
+
+        implicit none
+
+        ! SCALAR ARGUMENTS
+        logical, intent(out) :: lmem
+        integer, intent(in) :: lim,m,n
+        integer, intent(out) :: flag,jcnnz
+
+        ! ARRAY ARGUMENTS
+        integer, intent(out) :: jcfun(lim),jcvar(lim)
+        real(kind=8), intent(in) :: x(n)
+        real(kind=8), intent(out) :: g(n),jcval(lim)
+
+        flag = - 1
+
+    end subroutine myevalgjac
+
+    ! ******************************************************************
+    ! ******************************************************************
+
+    subroutine myevalgjacp(n,x,g,m,p,q,work,gotj,flag)
+
+        implicit none
+
+        ! SCALAR ARGUMENTS
+        logical, intent(inout) :: gotj
+        integer, intent(in) :: m,n
+        integer, intent(out) :: flag
+        character, intent(in) :: work
+
+        ! ARRAY ARGUMENTS
+        real(kind=8), intent(in) :: x(n)
+        real(kind=8), intent(inout) :: p(m),q(n)
+        real(kind=8), intent(out) :: g(n)
+
+        flag = - 1
+
+    end subroutine myevalgjacp
+
+    ! ******************************************************************
+    ! ******************************************************************
+
+    subroutine myevalhl(n,x,m,lambda,sf,sc,hlrow,hlcol,hlval,hlnnz,lim,lmem,flag)
+
+        implicit none
+
+        ! SCALAR ARGUMENTS
+        logical, intent(out) :: lmem
+        integer, intent(in) :: lim,m,n
+        integer, intent(out) :: flag,hlnnz
+        real(kind=8), intent(in) :: sf
+
+        ! ARRAY ARGUMENTS
+        integer, intent(out) :: hlcol(lim),hlrow(lim)
+        real(kind=8), intent(in) :: lambda(m),sc(m),x(n)
+        real(kind=8), intent(out) :: hlval(lim)
+
+        flag = - 1
+
+    end subroutine myevalhl
+
+    ! ******************************************************************
+    ! ******************************************************************
+
+    subroutine myevalhlp(n,x,m,lambda,sf,sc,p,hp,goth,flag)
+
+        implicit none
+
+        ! SCALAR ARGUMENTS
+        logical, intent(inout) :: goth
+        integer, intent(in) :: m,n
+        integer, intent(out) :: flag
+        real(kind=8), intent(in) :: sf
+
+        ! ARRAY ARGUMENTS
+        real(kind=8), intent(in) :: lambda(m),p(n),sc(m),x(n)
+        real(kind=8), intent(out) :: hp(n)
+
+        flag = - 1
+
+    end subroutine myevalhlp
+end Program main

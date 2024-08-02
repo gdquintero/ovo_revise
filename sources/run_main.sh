@@ -1,7 +1,7 @@
+export ALGENCAN=/opt/algencan-3.1.1
+
 rm -f main
 
-gfortran -c -O3 -Wall sort.f90
-gfortran -c -O3 -Wall main.f90
-gfortran -L$PWD sort.o main.o -llapack -o main
+gfortran -O3 -w -fcheck=all -g main.f90 -L$ALGENCAN/lib -lalgencan -lhsl sort.o subset.o -o main
 
 ./main
