@@ -84,26 +84,22 @@
     t(:) = data(1,:)
     y(:) = data(2,:)
 
-    do i = 1, samples
-        print*, t(i)
-    enddo
+    inf = 13
+    sup = 13
 
-    stop
-    inf = 1
-    sup = 10
 
-    allocate(outliers(3*samples*(sup-inf+1)),stat=allocerr)
+    ! allocate(outliers(3*samples*(sup-inf+1)),stat=allocerr)
 
-    if ( allocerr .ne. 0 ) then
-        write(*,*) 'Allocation error in main program'
-        stop
-    end if
+    ! if ( allocerr .ne. 0 ) then
+    !     write(*,*) 'Allocation error in main program'
+    !     stop
+    ! end if
 
-    outliers(:) = 0
+    ! outliers(:) = 0
 
-    call mixed_test(inf,sup,outliers,t,y,indices,Idelta,samples,m,n,xtrial)
+    ! call mixed_test(inf,sup,outliers,t,y,indices,Idelta,samples,m,n,xtrial)
 
-    call export(xtrial,outliers,sup)
+    ! call export(xtrial,outliers,sup)
 
     CONTAINS
 
@@ -120,8 +116,6 @@
 
         print*
         Print*, "OVO Algorithm for Measles"
-
-        y(:) = data(2,:)
 
         do noutliers = out_inf,out_sup
             call cpu_time(start)
@@ -157,8 +151,6 @@
 
         print*
         Print*, "OVO Algorithm for Mumps"
-
-        y(:) = data(3,:)
 
         do noutliers = out_inf,out_sup
             call cpu_time(start)
@@ -259,7 +251,7 @@
 
         integer, parameter  :: max_iter = 10000, max_iter_sub = 100, kflag = 2
         integer             :: iter,iter_sub,i,j
-        real(kind=8)        :: gaux1,gaux2,a,b,c,ebt,terminate,alpha,epsilon
+        real(kind=8)        :: gaux,terminate,alpha,epsilon
 
         alpha   = 1.0d-8
         epsilon = 1.0d-4
@@ -302,32 +294,20 @@
             equatn(:) = .false.
             linear(:) = .false.
             lambda(:) = 0.0d0
-    
-            a = xk(1)
-            b = xk(2)
-            c = xk(3)
 
             do i = 1, m
                 ti = t(Idelta(i))
 
-                ebt = exp(-b * ti)
+                call model(xk,Idelta(i),n,t,samples,gaux)
 
-                call model(xk,Idelta(i),n,t,samples,gaux1)
-
-                gaux1 = y(Idelta(i)) - gaux1
-
-                gaux2 = (a / b) * ti * ebt + (1.0d0 / b) * ((a / b) - c) * (ebt - 1.0d0) - c * ti
-
-                gaux2 = exp(gaux2)
+                gaux = y(Idelta(i)) - gaux
     
-                grad(i,1) = (1.0d0 / b**2) * (ebt * (ti * b + 1.0d0) - 1.0d0)
+                grad(i,1) = exp(-ti * x(5))
+                grad(i,2) = exp(-x(6) * (ti - x(9))**2)
+                grad(i,2) = exp(-x(7) * (ti - x(10))**2)
+                grad(i,2) = exp(-x(8) * (ti - x(11))**2)
     
-                grad(i,2) = ebt * ((-2.0d0 * a * ti / b**2) - ((a * ti**2) / b) - (2.0d0 * a / b**3) + &
-                            (c / b**2) + (c * ti / b)) + (2.0d0 * a / b**3) - (c / b**2)
-    
-                grad(i,3) = (1.0d0 / b) * (1.0d0 - ebt) - ti
-    
-                grad(i,:) = gaux1 * gaux2 * grad(i,:)
+                grad(i,:) = gaux * grad(i,:)
             end do
     
             sigma = sigmin
@@ -494,17 +474,9 @@
         integer,        intent(in) :: n,i,samples
         real(kind=8),   intent(in) :: x(n-1),t(samples)
         real(kind=8),   intent(out) :: res
-        real(kind=8) :: a,b,c,ti,ebt
 
-        a = x(1)
-        b = x(2)
-        c = x(3)
-        ti = t(i)
-        ebt = exp(-b * ti)
-
-        res = (a / b) * ti * ebt
-        res = res + (1.0d0 / b) * ((a / b) - c) * (ebt - 1.0d0) 
-        res = 1.0d0 - exp(res - c * ti)
+        res = x(1) * exp(-t(i) * x(5)) + x(2) * exp(-x(6) * (t(i) - x(9))**2) + &
+        x(3) * exp(-x(7) * (t(i) - x(10))**2) + x(4) * exp(-x(8) * (t(i) - x(11))**2)
 
     end subroutine model
 
