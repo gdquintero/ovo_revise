@@ -25,8 +25,11 @@
     integer :: i
     real(kind=8), dimension(3,3) :: solutions
 
+    character(len=128) :: pwd
+    call get_environment_variable('PWD',pwd)
+
     ! Reading data and storing it in the variables t and y
-    Open(Unit = 100, File = "output/seropositives.txt", ACCESS = "SEQUENTIAL")
+    Open(Unit = 100, File = trim(pwd)//"/../data/seropositives.txt", ACCESS = "SEQUENTIAL")
 
     ! Set parameters
     read(100,*) samples
@@ -135,10 +138,10 @@
             print*, "OVO function evaluations: ", n_eval
             write(*,1111) "Execution time: ", finish - start
 
-            Open(Unit = 100, File = "output/solutions_mixed_measles.txt", ACCESS = "SEQUENTIAL")
-            Open(Unit = 300, File = "output/fobj_mixed_measles.txt", ACCESS = "SEQUENTIAL")
-            Open(Unit = 400, File = "output/iterations_mixed_measles.txt", ACCESS = "SEQUENTIAL")
-            Open(Unit = 600, File = "output/outliers.txt", ACCESS = "SEQUENTIAL")
+            Open(Unit = 100, File =trim(pwd)//"/../output/solutions_mixed_measles.txt", ACCESS = "SEQUENTIAL")
+            Open(Unit = 300, File =trim(pwd)//"/../output/fobj_mixed_measles.txt", ACCESS = "SEQUENTIAL")
+            Open(Unit = 400, File =trim(pwd)//"/../output/iterations_mixed_measles.txt", ACCESS = "SEQUENTIAL")
+            Open(Unit = 600, File =trim(pwd)//"/../output/outliers.txt", ACCESS = "SEQUENTIAL")
 
             write(100,1000) xtrial(1), xtrial(2), xtrial(3)
             write(300,*) fovo
@@ -171,9 +174,9 @@
             print*, "OVO function evaluations: ", n_eval
             write(*,1111) "Execution time: ", finish - start
 
-            Open(Unit = 110, File = "output/solutions_mixed_mumps.txt", ACCESS = "SEQUENTIAL")
-            Open(Unit = 310, File = "output/fobj_mixed_mumps.txt", ACCESS = "SEQUENTIAL")
-            Open(Unit = 410, File = "output/iterations_mixed_mumps.txt", ACCESS = "SEQUENTIAL")
+            Open(Unit = 110, File =trim(pwd)//"/../output/solutions_mixed_mumps.txt", ACCESS = "SEQUENTIAL")
+            Open(Unit = 310, File =trim(pwd)//"/../output/fobj_mixed_mumps.txt", ACCESS = "SEQUENTIAL")
+            Open(Unit = 410, File =trim(pwd)//"/../output/iterations_mixed_mumps.txt", ACCESS = "SEQUENTIAL")
 
             write(110,1000) xtrial(1), xtrial(2), xtrial(3)
             write(310,*) fovo
@@ -206,9 +209,9 @@
             print*, "OVO function evaluations: ", n_eval
             write(*,1111) "Execution time: ", finish - start
 
-            Open(Unit = 120, File = "output/solutions_mixed_rubella.txt", ACCESS = "SEQUENTIAL")
-            Open(Unit = 320, File = "output/fobj_mixed_rubella.txt", ACCESS = "SEQUENTIAL")
-            Open(Unit = 420, File = "output/iterations_mixed_rubella.txt", ACCESS = "SEQUENTIAL")
+            Open(Unit = 120, File =trim(pwd)//"/../output/solutions_mixed_rubella.txt", ACCESS = "SEQUENTIAL")
+            Open(Unit = 320, File =trim(pwd)//"/../output/fobj_mixed_rubella.txt", ACCESS = "SEQUENTIAL")
+            Open(Unit = 420, File =trim(pwd)//"/../output/iterations_mixed_rubella.txt", ACCESS = "SEQUENTIAL")
 
             write(120,1000) xtrial(1), xtrial(2), xtrial(3)
             write(320,*) fovo
@@ -216,7 +219,7 @@
     
         enddo
         
-        Open(Unit = 500, File = "output/num_mixed_test.txt", ACCESS = "SEQUENTIAL")
+        Open(Unit = 500, File =trim(pwd)//"/../output/num_mixed_test.txt", ACCESS = "SEQUENTIAL")
         write(500,1200) out_inf
         write(500,1200) out_sup
         
@@ -411,7 +414,7 @@
 
         integer :: i
 
-        Open(Unit = 100, File = "output/solutions_ovo.txt", ACCESS = "SEQUENTIAL")
+        Open(Unit = 100, File =trim(pwd)//"/../output/solutions_ovo.txt", ACCESS = "SEQUENTIAL")
 
         write(100,110) xsol(1,1), xsol(1,2), xsol(1,3)
         write(100,110) xsol(2,1), xsol(2,2), xsol(2,3)
@@ -421,7 +424,7 @@
     
         close(100)
 
-        Open(Unit = 200, File = "output/outliers.txt", ACCESS = "SEQUENTIAL")
+        Open(Unit = 200, File =trim(pwd)//"/../output/outliers.txt", ACCESS = "SEQUENTIAL")
 
         write(200,210) noutliers
 

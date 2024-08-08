@@ -16,6 +16,8 @@ y = np.array([
     0.428,0.292,0.162,0.098,0.054
 ])
 
+sup = 6.4
+
 y = np.insert(y,4,1.418)
 y = np.insert(y,9,1.146)
 y = np.insert(y,15,1.132)
@@ -31,7 +33,13 @@ y = np.insert(y,67,1.338)
 y = np.insert(y,70,1.148)
 
 
-n = len(y)
+samples = len(y)
+t = np.linspace(0,sup,samples)
 
-plt.plot(np.linspace(1,6.4,n),y,"o")
+with open(parent+"/data/osborne2.txt","w") as f:
+    f.write("%i\n" % samples)
+    for i in range(samples):
+        f.write("%f %f\n" % (t[i],y[i]))
+
+plt.plot(t,y,"o")
 plt.show()

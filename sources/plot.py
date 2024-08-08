@@ -2,10 +2,14 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import models
+import os
+
+cwd = os.getcwd()
+parent =  os.path.abspath(os.path.join(cwd,os.pardir))
 
 def plot_solutions(ind,df_seropositives,df_sol,sero_outliers,noutliers):
     t = np.linspace(0,70,1000)
-    disease = [r"Measles",r"Mumps",r"Rubella"]
+    disease = [r"measles",r"mumps",r"rubella"]
     plt.rcParams.update({'font.size': 12})
     plt.rc('text', usetex=True)
     plt.rc('font', family='serif')
@@ -25,15 +29,15 @@ def plot_solutions(ind,df_seropositives,df_sol,sero_outliers,noutliers):
     l = plt.plot(df_seropositives[0].values,df_seropositives[ind].values,"ko")
     plt.setp(l, 'markersize', 6)
     # plt.title(disease[ind-1],fontsize = 18)
-    plt.savefig(disease[ind-1]+".pdf",bbox_inches = "tight")
+    plt.savefig(parent+"/images/"+disease[ind-1]+".pdf",bbox_inches = "tight")
     plt.show()
 
-df_seropositives = pd.read_table("output/seropositives.txt",delimiter=" ",header=None,skiprows=1)
-df_mixed_measles = pd.read_table("output/solutions_mixed_measles.txt",delimiter=" ",header=None,skiprows=0)
-df_mixed_mumps   = pd.read_table("output/solutions_mixed_mumps.txt",delimiter=" ",header=None,skiprows=0)
-df_mixed_rubella = pd.read_table("output/solutions_mixed_rubella.txt",delimiter=" ",header=None,skiprows=0)
+df_seropositives = pd.read_table(parent+"/data/seropositives.txt",delimiter=" ",header=None,skiprows=1)
+df_mixed_measles = pd.read_table(parent+"/output/solutions_mixed_measles.txt",delimiter=" ",header=None,skiprows=0)
+df_mixed_mumps   = pd.read_table(parent+"/output/solutions_mixed_mumps.txt",delimiter=" ",header=None,skiprows=0)
+df_mixed_rubella = pd.read_table(parent+"/output/solutions_mixed_rubella.txt",delimiter=" ",header=None,skiprows=0)
 
-with open("output/outliers.txt") as f:
+with open(parent+"/output/outliers.txt") as f:
     lines = f.readlines()
     xdata = [line.split()[0] for line in lines]
 

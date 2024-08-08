@@ -1,6 +1,10 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import os
+
+cwd = os.getcwd()
+parent =  os.path.abspath(os.path.join(cwd,os.pardir))
 
 def plot_seropositive(sero,x,y):
     # t = np.linspace(0,70,1000)
@@ -11,11 +15,11 @@ def plot_seropositive(sero,x,y):
     plt.plot(x,y,"ko",ls=":")
 
     if sero == "measles":
-        plt.savefig("sero_measles.pdf",bbox_inches = "tight") 
+        plt.savefig(parent+"/images/sero_measles.pdf",bbox_inches = "tight") 
     elif sero == "mumps":
-        plt.savefig("sero_mumps.pdf",bbox_inches = "tight")
+        plt.savefig(parent+"/images/sero_mumps.pdf",bbox_inches = "tight")
     else:
-        plt.savefig("sero_rubella.pdf",bbox_inches = "tight")
+        plt.savefig(parent+"/images/sero_rubella.pdf",bbox_inches = "tight")
 
     plt.show()
 
@@ -43,7 +47,6 @@ samples = len(age)
 # Adding outliers manually
 deviation = 0.5
 
-
 sero_measles[16] = deviation
 sero_measles[17] = deviation
 sero_measles[18] = deviation
@@ -63,7 +66,7 @@ age_midpoint = np.empty(samples)
 age_midpoint[:-1] = (age[:-1] + age[1:]) / 2
 age_midpoint[-1]  = 70
 
-with open("output/seropositives.txt","w") as f:
+with open(parent+"/data/seropositives.txt","w") as f:
     f.write("%i\n" % samples)
     for i in range(samples):
         f.write("%i %f %f %f %f\n" % (age[i],sero_measles[i],sero_mumps[i],sero_rubella[i],age_midpoint[i]))

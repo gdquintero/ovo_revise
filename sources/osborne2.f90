@@ -25,15 +25,18 @@
     integer :: i
     real(kind=8), dimension(3,3) :: solutions
 
+    character(len=128) :: pwd
+    call get_environment_variable('PWD',pwd)
+
     ! Reading data and storing it in the variables t and y
-    Open(Unit = 100, File = "output/seropositives.txt", ACCESS = "SEQUENTIAL")
+    Open(Unit = 100, File = trim(pwd)//"/../data/osborne2.txt", ACCESS = "SEQUENTIAL")
 
     ! Set parameters
     read(100,*) samples
 
     n = 12
 
-    allocate(t(samples),y(samples),x(n),xk(n-1),xtrial(n-1),l(n),u(n),xstar(n-1),data(5,samples),&
+    allocate(t(samples),y(samples),x(n),xk(n-1),xtrial(n-1),l(n),u(n),xstar(n-1),data(2,samples),&
     faux(samples),indices(samples),Idelta(samples),nu_l(n-1),nu_u(n-1),opt_cond(n-1),stat=allocerr)
 
     if ( allocerr .ne. 0 ) then
@@ -78,8 +81,14 @@
     u(1:n-1) = 1.0d+20; u(n) = 0.0d0
 
     ! Number of days
-    t(:) = data(1,:) ! Initial point
-    ! t(:) = data(5,:) ! Midpoint
+    t(:) = data(1,:)
+    y(:) = data(2,:)
+
+    do i = 1, samples
+        print*, t(i)
+    enddo
+
+    stop
     inf = 1
     sup = 10
 
