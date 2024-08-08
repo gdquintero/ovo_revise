@@ -16,4 +16,30 @@ y = np.array([
     0.428,0.292,0.162,0.098,0.054
 ])
 
-print(y)
+y = np.insert(y,4,1.418)
+y = np.insert(y,9,1.146)
+y = np.insert(y,15,1.132)
+y = np.insert(y,20,1.071)
+y = np.insert(y,22,1.175)
+y = np.insert(y,24,1.266)
+y = np.insert(y,33,0.979)
+y = np.insert(y,40,0.867)
+y = np.insert(y,42,1.109)
+y = np.insert(y,46,1.211)
+y = np.insert(y,47,0.942)
+y = np.insert(y,67,1.338)
+y = np.insert(y,70,1.148)
+
+# y[4] = 1.415
+# y[9] = 1.148
+# y[15] = 1.132
+# y[20] = 1.074
+# y[21] = 1.177
+# y[22] = 1.267
+# y[32] = 0.981
+# y[38] = 0.868
+
+n = len(y)
+
+plt.plot(np.linspace(1,6.4,n),y,"o")
+plt.show()
