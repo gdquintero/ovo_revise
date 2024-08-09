@@ -302,10 +302,17 @@
 
                 gaux = y(Idelta(i)) - gaux
     
-                grad(i,1) = exp(-ti * x(5))
-                grad(i,2) = exp(-x(6) * (ti - x(9))**2)
-                grad(i,2) = exp(-x(7) * (ti - x(10))**2)
-                grad(i,2) = exp(-x(8) * (ti - x(11))**2)
+                grad(i,1) = exp(-ti * xk(5))
+                grad(i,2) = exp(-xk(6) * (ti - xk(9))**2)
+                grad(i,3) = exp(-xk(7) * (ti - xk(10))**2)
+                grad(i,4) = exp(-xk(8) * (ti - xk(11))**2)
+                grad(i,5) = -ti * x(1) * exp(-ti * x(5))
+                grad(i,6) = (-x(2) * (ti - x(9))**2) * exp(-x(6) * (ti - x(9))**2)
+                grad(i,7) = (-x(3) * (ti - x(10))**2) * exp(-x(7) * (ti - x(10))**2)
+                grad(i,8) = (-x(4) * (ti - x(11))**2) * exp(-x(8) * (ti - x(11))**2)
+                grad(i,9) = 2.d0 * x(2) * x(6) * (ti - x(9)) * exp(-x(6) * (ti - x(9))**2)
+                grad(i,10) = 2.d0 * x(3) * x(7) * (ti - x(10)) * exp(-x(7) * (ti - x(10))**2)
+                grad(i,11) = 2.d0 * x(4) * x(8) * (ti - x(11)) * exp(-x(8) * (ti - x(11))**2)
     
                 grad(i,:) = gaux * grad(i,:)
             end do
