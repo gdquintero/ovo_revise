@@ -3,11 +3,12 @@
 
     implicit none 
     
-    integer :: allocerr,samples,inf,sup
+    integer :: allocerr,samples,inf,sup,noutliers,q,iterations,n_eval
     real(kind=8) :: fxk,fxtrial,ti,sigma
     real(kind=8), allocatable :: xtrial(:),faux(:),indices(:),nu_l(:),nu_u(:),opt_cond(:),&
                                  xstar(:),y(:),data(:,:),t(:)
     integer, allocatable :: Idelta(:),outliers(:)
+    real(kind=8) :: fovo,delta,sigmin,gamma,start,finish
     
     ! LOCAL SCALARS
     logical :: checkder
@@ -84,157 +85,28 @@
     t(:) = data(1,:)
     y(:) = data(2,:)
 
-    inf = 13
-    sup = 13
+    noutliers = 13
+    q = samples - noutliers
 
+    allocate(outliers(noutliers),stat=allocerr)
 
-    ! allocate(outliers(3*samples*(sup-inf+1)),stat=allocerr)
+    if ( allocerr .ne. 0 ) then
+        write(*,*) 'Allocation error in main program'
+        stop
+    end if
 
-    ! if ( allocerr .ne. 0 ) then
-    !     write(*,*) 'Allocation error in main program'
-    !     stop
-    ! end if
-
-    ! outliers(:) = 0
-
-    ! call mixed_test(inf,sup,outliers,t,y,indices,Idelta,samples,m,n,xtrial)
+    outliers(:) = 0
+    delta = 5.0d-4
+    sigmin = 1.0d-1
+    gamma = 5.0d0
+    xk(:) = (/1.3d0,0.65d0,0.65d0,0.7d0,0.6d0,3.d0,5.d0,7.d0,2.d0,4.5d0,5.5d0/)
+    
+    call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial,&
+    delta,sigmin,gamma,outliers,fovo,iterations,n_eval)
 
     ! call export(xtrial,outliers,sup)
 
     CONTAINS
-
-    subroutine mixed_test(out_inf,out_sup,outliers,t,y,indices,Idelta,samples,m,n,xtrial)
-        implicit none
-
-        integer,        intent(in) :: samples,n,out_inf,out_sup
-        real(kind=8),   intent(in) :: t(samples)
-        integer,        intent(inout) :: Idelta(samples),outliers(3*samples*(sup-inf+1)),m
-        real(kind=8),   intent(inout) :: indices(samples),xtrial(n-1),y(samples)
-
-        integer :: noutliers,q,iterations,ind,n_eval
-        real(kind=8) :: fovo,delta,sigmin,gamma,start,finish
-
-        print*
-        Print*, "OVO Algorithm for Measles"
-
-        do noutliers = out_inf,out_sup
-            call cpu_time(start)
-            q = samples - noutliers
-
-            print*
-            write(*,1100) "Number of outliers: ",noutliers
-            ! xk(:) = 1.0d-1
-            xk(:) = (/0.197d0,0.287d0,0.021d0/)
-
-            ind = 1
-            delta = 5.0d-4
-            sigmin = 1.0d-1
-            gamma = 5.0d0
-            
-            call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial, &
-            delta,sigmin,gamma,outliers(ind:ind+noutliers-1),fovo,iterations,n_eval)
-
-            call cpu_time(finish)
-            print*, "OVO function evaluations: ", n_eval
-            write(*,1111) "Execution time: ", finish - start
-
-            Open(Unit = 100, File = "output/solutions_mixed_measles.txt", ACCESS = "SEQUENTIAL")
-            Open(Unit = 300, File = "output/fobj_mixed_measles.txt", ACCESS = "SEQUENTIAL")
-            Open(Unit = 400, File = "output/iterations_mixed_measles.txt", ACCESS = "SEQUENTIAL")
-            Open(Unit = 600, File = "output/outliers.txt", ACCESS = "SEQUENTIAL")
-
-            write(100,1000) xtrial(1), xtrial(2), xtrial(3)
-            write(300,*) fovo
-            write(400,*) iterations
-            
-        enddo
-
-        print*
-        Print*, "OVO Algorithm for Mumps"
-
-        do noutliers = out_inf,out_sup
-            call cpu_time(start)
-            q = samples - noutliers
-            print*
-            write(*,1100) "Number of outliers: ",noutliers
-            ! xk(:) = 1.0d-1
-            xk(:) = (/0.156d0,0.250d0,0.0d0/)
-
-            ind = ind + noutliers
-            ! delta = 5.0d-4
-            ! sigmin = 1.0d-1
-            ! gamma = 5.0d0
-
-            call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial, &
-            delta,sigmin,gamma,outliers(ind:ind+noutliers-1),fovo,iterations,n_eval)
-
-            call cpu_time(finish)
-            print*, "OVO function evaluations: ", n_eval
-            write(*,1111) "Execution time: ", finish - start
-
-            Open(Unit = 110, File = "output/solutions_mixed_mumps.txt", ACCESS = "SEQUENTIAL")
-            Open(Unit = 310, File = "output/fobj_mixed_mumps.txt", ACCESS = "SEQUENTIAL")
-            Open(Unit = 410, File = "output/iterations_mixed_mumps.txt", ACCESS = "SEQUENTIAL")
-
-            write(110,1000) xtrial(1), xtrial(2), xtrial(3)
-            write(310,*) fovo
-            write(410,*) iterations
-        enddo
-
-        print*
-        Print*, "OVO Algorithm for Rubella"
-
-        y(:) = data(4,:)
-
-        do noutliers = out_inf,out_sup
-            call cpu_time(start)
-            q = samples - noutliers
-            print*
-            write(*,1100) "Number of outliers: ",noutliers
-            ! xk(:) = 1.0d-1
-            xk(:) = (/0.0628d0,0.178d0,0.020d0/)
-
-            ind = ind + noutliers
-
-            ! delta = 1.0d-3
-            ! sigmin = 1.0d-1
-            ! gamma = 2.0d0
-
-            call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial, &
-            delta,sigmin,gamma,outliers(ind:ind+noutliers-1),fovo,iterations,n_eval)
-
-            call cpu_time(finish)
-            print*, "OVO function evaluations: ", n_eval
-            write(*,1111) "Execution time: ", finish - start
-
-            Open(Unit = 120, File = "output/solutions_mixed_rubella.txt", ACCESS = "SEQUENTIAL")
-            Open(Unit = 320, File = "output/fobj_mixed_rubella.txt", ACCESS = "SEQUENTIAL")
-            Open(Unit = 420, File = "output/iterations_mixed_rubella.txt", ACCESS = "SEQUENTIAL")
-
-            write(120,1000) xtrial(1), xtrial(2), xtrial(3)
-            write(320,*) fovo
-            write(420,*) iterations
-    
-        enddo
-        
-        Open(Unit = 500, File = "output/num_mixed_test.txt", ACCESS = "SEQUENTIAL")
-        write(500,1200) out_inf
-        write(500,1200) out_sup
-        
-        1000 format (ES12.6,1X,ES12.6,1X,ES12.6)
-        1100 format (1X,A20,I2)
-        1200 format (I2)
-        1111 format (A16,2X,F4.2)
-
-        close(100)
-        close(110)
-        close(120)
-        close(300)
-        close(310)
-        close(320)
-        close(500)
-        
-    end subroutine mixed_test
 
     !==============================================================================
     ! MAIN ALGORITHM
@@ -300,7 +172,7 @@
 
                 call model(xk,Idelta(i),n,t,samples,gaux)
 
-                gaux = y(Idelta(i)) - gaux
+                gaux = gaux - y(Idelta(i))
     
                 grad(i,1) = exp(-ti * xk(5))
                 grad(i,2) = exp(-xk(6) * (ti - xk(9))**2)
