@@ -4,11 +4,11 @@
     implicit none 
     
     integer :: allocerr,samples,inf,sup,noutliers,q,iterations,n_eval
-    real(kind=8) :: fxk,fxtrial,ti,sigma
+    real(kind=8) :: fxk,fxtrial,ti,sigma,fovo_best
     real(kind=8), allocatable :: xtrial(:),faux(:),indices(:),nu_l(:),nu_u(:),opt_cond(:),&
-                                 xstar(:),y(:),data(:,:),t(:)
+                                 xstar(:),y(:),data(:,:),t(:),xbest(:)
     integer, allocatable :: Idelta(:),outliers(:)
-    real(kind=8) :: fovo,delta,sigmin,gamma,start,finish
+    real(kind=8) :: fovo,delta,sigmin,gamma,start,finish,seed
     
     ! LOCAL SCALARS
     logical :: checkder
@@ -23,7 +23,7 @@
     logical,        pointer :: equatn(:),linear(:)
     real(kind=8),   pointer :: lambda(:)
 
-    integer :: i
+    integer :: i,itrial,ntrials
     real(kind=8), dimension(3,3) :: solutions
 
     character(len=128) :: pwd
@@ -37,8 +37,7 @@
 
     n = 12
 
-    allocate(t(samples),y(samples),x(n),xk(n-1),xtrial(n-1),l(n),u(n),xstar(n-1),data(2,samples),&
-    faux(samples),indices(samples),Idelta(samples),nu_l(n-1),nu_u(n-1),opt_cond(n-1),stat=allocerr)
+    allocate(t(samples),y(samples),x(n),xk(n-1),xbest(n-1),xtrial(n-1),l(n),u(n),xstar(n-1),data(2,samples),faux(samples),indices(samples),Idelta(samples),nu_l(n-1),nu_u(n-1),opt_cond(n-1),stat=allocerr)
 
     if ( allocerr .ne. 0 ) then
         write(*,*) 'Allocation error in main program'
@@ -85,7 +84,7 @@
     t(:) = data(1,:)
     y(:) = data(2,:)
 
-    noutliers = 13
+    noutliers = 0
     q = samples - noutliers
 
     allocate(outliers(noutliers),stat=allocerr)
@@ -95,15 +94,45 @@
         stop
     end if
 
-    outliers(:) = 0
-    delta = 1.0d-7
-    sigmin = 1.0d-2
-    gamma = 5.0d0
-    xk(:) = (/1.3d0,0.65d0,0.65d0,0.7d0,0.6d0,3.d0,5.d0,7.d0,2.d0,4.5d0,5.5d0/)
-    xk(:) = 1.0d+1
-    
-    call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial,&
-    delta,sigmin,gamma,outliers,fovo,iterations,n_eval)
+    Open(Unit = 99, File = trim(pwd)//"/../data/delta.txt", ACCESS = "SEQUENTIAL")
+
+    read(99,*) delta
+
+    close(99)
+
+    seed = 123456.0d0
+    ntrials = 100
+    fovo_best = huge(1.0d0)
+
+    do itrial = 1,ntrials
+        outliers(:) = 0
+        ! delta = 5.0d-4
+        sigmin = 1.0d-1
+        gamma = 5.0d0
+        ! xk(:) = (/1.3d0,0.65d0,0.65d0,0.7d0,0.6d0,3.d0,5.d0,7.d0,2.d0,4.5d0,5.5d0/)
+
+        xk(:) = (/1.308d0,0.434d0,0.637d0,0.613d0,0.714d0,1.056d0,1.339d0,5.914d0,2.382d0,4.584d0,5.671d0/)
+
+        do i = 1, n-1
+            xk(i) = xk(i) + (2.0d0 * drand(seed) - 1.0d0) * 1.0d-1 * max(1.0d0,abs(xk(i)))
+        enddo
+
+        call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial,&
+        delta,sigmin,gamma,outliers,fovo,iterations,n_eval)
+
+        write(*,*) "En la ejecucion ",itrial," el valor de fovo fue ",fovo
+
+        if (fovo .lt. fovo_best) then
+            write(*,*) "Encontro una fovo mejor!"
+            fovo_best = fovo
+            xbest(:) = xk(:)
+        endif
+
+    enddo
+
+    ! do i = 1, 13
+    !     print*, outliers(i), y(outliers(i))
+    ! enddo
 
     Open(Unit = 100, File = trim(pwd)//"/../output/solution_osborne2.txt", ACCESS = "SEQUENTIAL")
 
@@ -274,6 +303,42 @@
         iterations = iter
         
     end subroutine ovo_algorithm
+
+    function drand(ix)
+
+        implicit none
+      
+        ! This is the random number generator of Schrage:
+        !
+        ! L. Schrage, A more portable Fortran random number generator, ACM
+        ! Transactions on Mathematical Software 5 (1979), 132-138.
+      
+        ! FUNCTION TYPE
+        real(kind=8) :: drand
+      
+        ! SCALAR ARGUMENT
+        real(kind=8), intent(inout) :: ix
+      
+        ! LOCAL ARRAYS
+        real(kind=8) :: a,p,b15,b16,xhi,xalo,leftlo,fhi,k
+      
+        data a/16807.d0/,b15/32768.d0/,b16/65536.d0/,p/2147483647.d0/
+      
+        xhi= ix/b16
+        xhi= xhi - dmod(xhi,1.d0)
+        xalo= (ix-xhi*b16)*a
+        leftlo= xalo/b16
+        leftlo= leftlo - dmod(leftlo,1.d0)
+        fhi= xhi*a + leftlo
+        k= fhi/b15
+        k= k - dmod(k,1.d0)
+        ix= (((xalo-leftlo*b16)-p)+(fhi-k*b15)*b16)+k
+        if (ix.lt.0) ix= ix + p
+        drand= ix*4.656612875d-10
+      
+        return
+      
+      end function drand
 
     !==============================================================================
     ! EXPORT RESULT TO PLOT
@@ -455,7 +520,7 @@
         flag = 0
 
         c = dot_product(x(1:n-1) - xk(1:n-1),grad(ind,1:n-1)) + &
-            (sigma * 0.5d0) * (norm2(x(1:n-1) - xk(1:n-1))**2) - x(n)
+        (sigma * 0.5d0) * dot_product(x(1:n-1) - xk(1:n-1),x(1:n-1) - xk(1:n-1)) - x(n)
 
     end subroutine myevalc
 
@@ -489,7 +554,8 @@
         end if
 
         jcvar(1:n) = (/(i, i = 1, n)/)
-        jcval(1:n) = (/(grad(ind,i) + sigma * (x(i) - xk(i)), i = 1, n-1), -1.0d0/)
+        jcval(1:n) = (/grad(ind,1:n-1) + sigma * (x(1:n-1) - xk(1:n-1)),-1.0d0/)
+        ! jcval(1:n) = (/(grad(ind,i) + sigma * (x(i) - xk(i)), i = 1, n-1), -1.0d0/)
 
     end subroutine myevaljac
 
