@@ -96,13 +96,20 @@
     end if
 
     outliers(:) = 0
-    delta = 5.0d-4
-    sigmin = 1.0d-1
+    delta = 1.0d-7
+    sigmin = 1.0d-2
     gamma = 5.0d0
     xk(:) = (/1.3d0,0.65d0,0.65d0,0.7d0,0.6d0,3.d0,5.d0,7.d0,2.d0,4.5d0,5.5d0/)
+    xk(:) = 1.0d+1
     
     call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial,&
     delta,sigmin,gamma,outliers,fovo,iterations,n_eval)
+
+    Open(Unit = 100, File = trim(pwd)//"/../output/solution_osborne2.txt", ACCESS = "SEQUENTIAL")
+
+    write(100,"(11F7.3)") xk(1),xk(2),xk(3),xk(4),xk(5),xk(6),xk(7),xk(8),xk(9),xk(10),xk(11)
+
+    close(100)
 
     ! call export(xtrial,outliers,sup)
 
