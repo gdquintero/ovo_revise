@@ -106,7 +106,7 @@
     do itrial = 1,ntrials
         
         outliers(:) = 0
-        delta = 5.0d-10
+        delta = 5.0d-7
         sigmin = 1.0d-1
         gamma = 1.0d+1
         ! xk(:) = (/1.3d0,0.65d0,0.65d0,0.7d0,0.6d0,3.d0,5.d0,7.d0,2.d0,4.5d0,5.5d0/)

@@ -7,13 +7,26 @@ import os
 cwd = os.getcwd()
 parent =  os.path.abspath(os.path.join(cwd,os.pardir))
 
+size_img = 0.6
+plt.rcParams.update({'font.size': 11})
+plt.rcParams['figure.figsize'] = [size_img * 6.4,size_img * 4.8]
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
 df_data = pd.read_table(parent+"/data/osborne2.txt",delimiter=" ",header=None,skiprows=1,skipinitialspace=True)
 df_sol = pd.read_table(parent+"/output/solution_osborne2.txt",delimiter=" ",header=None,skiprows=0,skipinitialspace=True)
+df_outliers = pd.read_table(parent+"/output/outliers_osborne2.txt",delimiter=" ",header=None,skiprows=0,skipinitialspace=True)
 
 t = np.linspace(df_data[0].values[0],df_data[0].values[-1],1000)
+noutliers = df_outliers[0].values[0]
+outliers = np.empty((2,noutliers))
 
-# print(df_sol.values[0])
+for i in range(noutliers):
+    outliers[0,i] = df_data[0].values[df_outliers[0].values[i+1]-1]
+    outliers[1,i] = df_data[1].values[df_outliers[0].values[i+1]-1]
+    # print(outliers[1][i])
 
-plt.plot(df_data[0].values,df_data[1].values,"ro")
-plt.plot(t,models.osborne2(df_sol.values[0],t))
+plt.plot(df_data[0].values,df_data[1].values,"ko",ms=2)
+plt.plot(t,models.osborne2(df_sol.values[0],t),lw=1)
+plt.plot(outliers[0],outliers[1],'ro',mfc='none',ms=6,mew=0.5)
 plt.show()
