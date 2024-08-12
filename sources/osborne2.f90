@@ -106,19 +106,19 @@
     do itrial = 1,ntrials
         
         outliers(:) = 0
-        delta = 5.0d-7
+        delta = 5.0d-4
         sigmin = 1.0d-1
         gamma = 1.0d+1
         ! xk(:) = (/1.3d0,0.65d0,0.65d0,0.7d0,0.6d0,3.d0,5.d0,7.d0,2.d0,4.5d0,5.5d0/)
 
         xk(:) = (/1.308d0,0.434d0,0.637d0,0.613d0,0.714d0,1.056d0,1.339d0,5.914d0,2.382d0,4.584d0,5.671d0/)
 
-        do i = 1, n-1
-            xk(i) = xk(i) + (2.0d0 * drand(seed) - 1.0d0) * 1.0d-1 * max(1.0d0,abs(xk(i)))
-        enddo
+        ! do i = 1, n-1
+        !     xk(i) = xk(i) + (2.0d0 * drand(seed) - 1.0d0) * 1.0d-1 * max(1.0d0,abs(xk(i)))
+        ! enddo
 
         call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial,&
-        delta,sigmin,gamma,outliers,.true.,fovo,iterations,n_eval)
+        delta,sigmin,gamma,outliers,.false.,fovo,iterations,n_eval)
 
         write(*,*) "En la ejecucion ",itrial," el valor de fovo fue ",fovo
 
