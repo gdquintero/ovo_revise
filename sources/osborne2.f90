@@ -37,7 +37,8 @@
 
     n = 12
 
-    allocate(t(samples),y(samples),x(n),xk(n-1),xbest(n-1),xtrial(n-1),l(n),u(n),xstar(n-1),data(2,samples),faux(samples),indices(samples),Idelta(samples),nu_l(n-1),nu_u(n-1),opt_cond(n-1),stat=allocerr)
+    allocate(t(samples),y(samples),x(n),xk(n-1),xbest(n-1),xtrial(n-1),l(n),u(n),xstar(n-1),data(2,samples),faux(samples),&
+    indices(samples),Idelta(samples),nu_l(n-1),nu_u(n-1),opt_cond(n-1),stat=allocerr)
 
     if ( allocerr .ne. 0 ) then
         write(*,*) 'Allocation error in main program'
@@ -84,7 +85,7 @@
     t(:) = data(1,:)
     y(:) = data(2,:)
 
-    noutliers = 0
+    noutliers = 13
     q = samples - noutliers
 
     allocate(outliers(noutliers),stat=allocerr)
@@ -94,21 +95,20 @@
         stop
     end if
 
-    Open(Unit = 99, File = trim(pwd)//"/../data/delta.txt", ACCESS = "SEQUENTIAL")
-
-    read(99,*) delta
-
-    close(99)
+    ! Open(Unit = 99, File = trim(pwd)//"/../data/delta.txt", ACCESS = "SEQUENTIAL")
+    ! read(99,*) delta
+    ! close(99)
 
     seed = 123456.0d0
-    ntrials = 100
+    ntrials = 1
     fovo_best = huge(1.0d0)
 
     do itrial = 1,ntrials
+        
         outliers(:) = 0
-        ! delta = 5.0d-4
+        delta = 5.0d-10
         sigmin = 1.0d-1
-        gamma = 5.0d0
+        gamma = 1.0d+1
         ! xk(:) = (/1.3d0,0.65d0,0.65d0,0.7d0,0.6d0,3.d0,5.d0,7.d0,2.d0,4.5d0,5.5d0/)
 
         xk(:) = (/1.308d0,0.434d0,0.637d0,0.613d0,0.714d0,1.056d0,1.339d0,5.914d0,2.382d0,4.584d0,5.671d0/)
@@ -118,7 +118,7 @@
         enddo
 
         call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial,&
-        delta,sigmin,gamma,outliers,fovo,iterations,n_eval)
+        delta,sigmin,gamma,outliers,.true.,fovo,iterations,n_eval)
 
         write(*,*) "En la ejecucion ",itrial," el valor de fovo fue ",fovo
 
@@ -128,19 +128,33 @@
             xbest(:) = xk(:)
         endif
 
+        print*
+
     enddo
+
+    ! print*, "fovo mejor: ", fovo_best
+    ! print*
+    ! print*, "Rodando con la mejor solucion:"
+
+    ! call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial,&
+    !     delta,sigmin,gamma,outliers,.true.,fovo,iterations,n_eval)
 
     ! do i = 1, 13
     !     print*, outliers(i), y(outliers(i))
     ! enddo
 
-    Open(Unit = 100, File = trim(pwd)//"/../output/solution_osborne2.txt", ACCESS = "SEQUENTIAL")
+    Open(Unit = 98, File = trim(pwd)//"/../output/solution_osborne2.txt", ACCESS = "SEQUENTIAL")
+    write(98,"(11F7.3)") xk(1),xk(2),xk(3),xk(4),xk(5),xk(6),xk(7),xk(8),xk(9),xk(10),xk(11)
 
-    write(100,"(11F7.3)") xk(1),xk(2),xk(3),xk(4),xk(5),xk(6),xk(7),xk(8),xk(9),xk(10),xk(11)
+    Open(Unit = 99, File = trim(pwd)//"/../output/outliers_osborne2.txt", ACCESS = "SEQUENTIAL")
+    write(99,"(I2)") noutliers
 
-    close(100)
-
-    ! call export(xtrial,outliers,sup)
+    do i = 1, noutliers
+        write(99,"(I2)") outliers(i)
+    enddo
+    
+    close(98)
+    close(99)
 
     CONTAINS
 
@@ -148,9 +162,10 @@
     ! MAIN ALGORITHM
     !==============================================================================
     subroutine ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial, &
-                             delta,sigmin,gamma,outliers,fovo,iterations,n_eval)
+                             delta,sigmin,gamma,outliers,print_iter,fovo,iterations,n_eval)
         implicit none
 
+        logical,        intent(in) :: print_iter
         integer,        intent(in) :: q,noutliers,samples,n
         real(kind=8),   intent(in) :: t(samples),y(samples),delta,sigmin,gamma
         integer,        intent(inout) :: Idelta(samples),m
@@ -181,13 +196,17 @@
 
         call mount_Idelta(faux,delta,q,indices,samples,Idelta,m)
 
-        print*,"-----------------------------------------------------------------------------"
-        write(*,10) "Iterations","Inter. Iter.","Objective func.","Optimality cond.","Idelta","Sum LM"
-        10 format (2X,A11,2X,A12,2X,A15,2X,A16,2X,A6,2X,A6)
-        print*,"-----------------------------------------------------------------------------"
+        if (print_iter) then
 
-        write(*,20)  0,"-",fxk,"-",m,"-"
-        20 format (7X,I1,13X,A1,6X,ES14.6,12X,A1,11X,I2,6X,A1)
+            print*,"-----------------------------------------------------------------------------"
+            write(*,10) "Iterations","Inter. Iter.","Objective func.","Optimality cond.","Idelta","Sum LM"
+            10 format (2X,A11,2X,A12,2X,A15,2X,A16,2X,A6,2X,A6)
+            print*,"-----------------------------------------------------------------------------"
+
+            write(*,20)  0,"-",fxk,"-",m,"-"
+            20 format (7X,I1,13X,A1,6X,ES14.6,12X,A1,11X,I2,6X,A1)
+
+        endif
 
         do
             iter = iter + 1
@@ -283,8 +302,12 @@
             terminate = norm2(opt_cond)
             ! terminate = norm2(xk-xtrial)
 
-            write(*,30)  iter,iter_sub,fxtrial,terminate,m,sum(lambda(:))
-            30 format (2X,I6,10X,I4,6X,ES14.6,4X,ES14.6,6X,I2,5X,F3.1)
+            if (print_iter) then
+
+                write(*,30)  iter,iter_sub,fxtrial,terminate,m,sum(lambda(:))
+                30 format (2X,I6,10X,I4,6X,ES14.6,4X,ES14.6,6X,I2,5X,F3.1)
+
+            endif
 
             deallocate(lambda,equatn,linear,grad)
             fxk = fxtrial
@@ -339,41 +362,6 @@
         return
       
       end function drand
-
-    !==============================================================================
-    ! EXPORT RESULT TO PLOT
-    !==============================================================================
-    subroutine export(xsol,outliers,noutliers)
-        implicit none
-
-        integer,        intent(in) :: noutliers,outliers(3*samples)
-        real(kind=8),   intent(in) :: xsol(n-1,n-1)
-
-        integer :: i
-
-        Open(Unit = 100, File = "output/solutions_ovo.txt", ACCESS = "SEQUENTIAL")
-
-        write(100,110) xsol(1,1), xsol(1,2), xsol(1,3)
-        write(100,110) xsol(2,1), xsol(2,2), xsol(2,3)
-        write(100,110) xsol(3,1), xsol(3,2), xsol(3,3)
-
-        110 format (ES12.6,1X,ES12.6,1X,ES12.6)
-    
-        close(100)
-
-        Open(Unit = 200, File = "output/outliers.txt", ACCESS = "SEQUENTIAL")
-
-        write(200,210) noutliers
-
-        do i = 1, 3*noutliers
-            write(200,210) outliers(i)
-        enddo
-
-        210 format (I2)
-
-        close(200)
-
-    end subroutine export
 
     !==============================================================================
     ! MOUNT THE SET OF INDICES I(x,delta)
