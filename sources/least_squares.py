@@ -37,8 +37,11 @@ def main(problem):
 
     else:
         df = pd.read_table(parent+"/data/osborne2.txt",delimiter=" ",header=None,skiprows=1)
-        print(df)
-
+        popt, pcov = curve_fit(models.osborne2,df[0].values,df[1].values,p0=np.ones(11),method='trf')
+        
+        with open(parent+"/output/sol_ls_osborne2.txt","w") as f:
+            for i in range(11):
+                f.write("%f\n" % popt[i])
     
 
 main(2)
