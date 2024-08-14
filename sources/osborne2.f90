@@ -100,21 +100,23 @@
     ! close(99)
 
     seed = 123456.0d0
-    ntrials = 1
+    ntrials = 100
     fovo_best = huge(1.0d0)
+
+    call cpu_time(start)
 
     do itrial = 1,ntrials
         
         outliers(:) = 0
-        delta = 5.0d-4
+        delta = 5.0d-2
         sigmin = 1.0d-1
-        gamma = 1.0d+1
-        ! xk(:) = (/1.3d0,0.65d0,0.65d0,0.7d0,0.6d0,3.d0,5.d0,7.d0,2.d0,4.5d0,5.5d0/)
+        gamma = 5.0d0
+        xk(:) = (/1.3d0,0.65d0,0.65d0,0.7d0,0.6d0,3.d0,5.d0,7.d0,2.d0,4.5d0,5.5d0/)
 
-        xk(:) = (/1.308d0,0.434d0,0.637d0,0.613d0,0.714d0,1.056d0,1.339d0,5.914d0,2.382d0,4.584d0,5.671d0/)
+        ! xk(:) = (/1.308d0,0.434d0,0.637d0,0.613d0,0.714d0,1.056d0,1.339d0,5.914d0,2.382d0,4.584d0,5.671d0/)
 
         ! do i = 1, n-1
-        !     xk(i) = xk(i) + (2.0d0 * drand(seed) - 1.0d0) * 1.0d-1 * max(1.0d0,abs(xk(i)))
+        !     xk(i) = xk(i) + (2.0d0 * drand(seed) - 1.0d0) * 5.0d-1 * max(1.0d0,abs(xk(i)))
         ! enddo
 
         call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial,&
@@ -128,9 +130,17 @@
             xbest(:) = xk(:)
         endif
 
-        print*
-
     enddo
+
+    xk(:) = xbest
+    fovo = fovo_best
+
+    call cpu_time(finish)
+    
+    write(*,"(A6,1X,ES10.3)") "fovo: ", fovo
+    print*, "OVO function evaluations: ", n_eval
+    write(*,"(A16,2X,F6.2)") "Execution time: ", finish - start
+    print*, "Rodada con ", noutliers, "outliers"
 
     ! print*, "fovo mejor: ", fovo_best
     ! print*
@@ -172,7 +182,7 @@
         real(kind=8),   intent(inout) :: indices(samples),xtrial(n-1),fovo
         integer,        intent(inout) :: outliers(noutliers),iterations,n_eval
 
-        integer, parameter  :: max_iter = 10000, max_iter_sub = 100, kflag = 2
+        integer, parameter  :: max_iter = 100000, max_iter_sub = 1000, kflag = 2
         integer             :: iter,iter_sub,i,j
         real(kind=8)        :: gaux,terminate,alpha,epsilon
 
@@ -243,8 +253,14 @@
     
                 grad(i,:) = gaux * grad(i,:)
             end do
-    
+            
             sigma = sigmin
+            ! if (iter .eq. 1) then
+            !     sigma = sigmin
+            ! else
+            !     sigma = sigma / gamma
+            ! endif
+            
             iter_sub = 1
             x(:) = (/xk(:),0.0d0/)
     
