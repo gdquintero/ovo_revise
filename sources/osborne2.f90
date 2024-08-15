@@ -3,10 +3,10 @@
 
     implicit none 
     
-    integer :: allocerr,samples,inf,sup,noutliers,q,iterations,n_eval
+    integer :: allocerr,samples,noutliers,q,iterations,n_eval
     real(kind=8) :: fxk,fxtrial,ti,sigma,fovo_best
     real(kind=8), allocatable :: xtrial(:),faux(:),indices(:),nu_l(:),nu_u(:),opt_cond(:),&
-                                 xstar(:),y(:),data(:,:),t(:),xbest(:)
+                                 xinit(:),y(:),data(:,:),t(:),xbest(:)
     integer, allocatable :: Idelta(:),outliers(:)
     real(kind=8) :: fovo,delta,sigmin,gamma,start,finish,seed
     
@@ -37,7 +37,7 @@
 
     n = 12
 
-    allocate(t(samples),y(samples),x(n),xk(n-1),xbest(n-1),xtrial(n-1),l(n),u(n),xstar(n-1),data(2,samples),faux(samples),&
+    allocate(t(samples),y(samples),x(n),xk(n-1),xbest(n-1),xtrial(n-1),l(n),u(n),xinit(n-1),data(2,samples),faux(samples),&
     indices(samples),Idelta(samples),nu_l(n-1),nu_u(n-1),opt_cond(n-1),stat=allocerr)
 
     if ( allocerr .ne. 0 ) then
@@ -95,12 +95,18 @@
         stop
     end if
 
-    ! Open(Unit = 99, File = trim(pwd)//"/../data/delta.txt", ACCESS = "SEQUENTIAL")
-    ! read(99,*) delta
-    ! close(99)
+    Open(Unit = 100, File = trim(pwd)//"/../output/sol_ls_osborne2.txt", ACCESS = "SEQUENTIAL")
+
+    do i = 1, n-1
+        read(100,*) xinit(i)
+    enddo
+
+    close(100)
+
+    xinit(:) = (/1.3d0,0.65d0,0.65d0,0.7d0,0.6d0,3.d0,5.d0,7.d0,2.d0,4.5d0,5.5d0/)
 
     seed = 123456.0d0
-    ntrials = 100
+    ntrials = 1000
     fovo_best = huge(1.0d0)
 
     call cpu_time(start)
@@ -108,16 +114,15 @@
     do itrial = 1,ntrials
         
         outliers(:) = 0
-        delta = 5.0d-2
+        delta = 5.0d-4
         sigmin = 1.0d-1
         gamma = 5.0d0
-        xk(:) = (/1.3d0,0.65d0,0.65d0,0.7d0,0.6d0,3.d0,5.d0,7.d0,2.d0,4.5d0,5.5d0/)
 
-        ! xk(:) = (/1.308d0,0.434d0,0.637d0,0.613d0,0.714d0,1.056d0,1.339d0,5.914d0,2.382d0,4.584d0,5.671d0/)
+        xk(:) = xinit(:)
 
-        ! do i = 1, n-1
-        !     xk(i) = xk(i) + (2.0d0 * drand(seed) - 1.0d0) * 5.0d-1 * max(1.0d0,abs(xk(i)))
-        ! enddo
+        do i = 1, n-1
+            xk(i) = xk(i) + (2.0d0 * drand(seed) - 1.0d0) * 5.0d-2 * max(1.0d0,abs(xk(i)))
+        enddo
 
         call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial,&
         delta,sigmin,gamma,outliers,.false.,fovo,iterations,n_eval)
@@ -141,17 +146,6 @@
     print*, "OVO function evaluations: ", n_eval
     write(*,"(A16,2X,F6.2)") "Execution time: ", finish - start
     print*, "Rodada con ", noutliers, "outliers"
-
-    ! print*, "fovo mejor: ", fovo_best
-    ! print*
-    ! print*, "Rodando con la mejor solucion:"
-
-    ! call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial,&
-    !     delta,sigmin,gamma,outliers,.true.,fovo,iterations,n_eval)
-
-    ! do i = 1, 13
-    !     print*, outliers(i), y(outliers(i))
-    ! enddo
 
     Open(Unit = 98, File = trim(pwd)//"/../output/solution_osborne2.txt", ACCESS = "SEQUENTIAL")
     write(98,"(11F7.3)") xk(1),xk(2),xk(3),xk(4),xk(5),xk(6),xk(7),xk(8),xk(9),xk(10),xk(11)

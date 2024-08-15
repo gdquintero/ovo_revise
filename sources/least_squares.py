@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from sklearn.metrics import mean_squared_error
 import models
@@ -37,11 +38,17 @@ def main(problem):
 
     else:
         df = pd.read_table(parent+"/data/osborne2.txt",delimiter=" ",header=None,skiprows=1)
-        popt, pcov = curve_fit(models.osborne2,df[0].values,df[1].values,p0=np.ones(11),method='trf')
+        popt, pcov = curve_fit(models.osborne2,df[0].values,df[1].values,p0 = 10. * np.ones(11))
         
         with open(parent+"/output/sol_ls_osborne2.txt","w") as f:
             for i in range(11):
                 f.write("%f\n" % popt[i])
-    
+
+        t = np.linspace(df[0].values[0],df[0].values[-1],1000)
+
+        plt.plot(df[0].values,df[1].values,"ko",ms=2)
+        plt.plot(t,models.osborne2(t,*popt),lw=1)
+        plt.show()    
 
 main(2)
+
