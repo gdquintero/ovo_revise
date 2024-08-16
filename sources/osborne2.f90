@@ -85,7 +85,11 @@
     t(:) = data(1,:)
     y(:) = data(2,:)
 
-    noutliers = 15
+    Open(Unit= 100, file = 'param.txt')
+    read(100,*) delta,sigmin,gamma,noutliers
+    close(100)
+
+    ! noutliers = 8
     q = samples - noutliers
 
     allocate(outliers(noutliers),stat=allocerr)
@@ -114,9 +118,9 @@
     do itrial = 1,ntrials
         
         outliers(:) = 0
-        delta = 5.0d-4
-        sigmin = 1.0d-1
-        gamma = 5.0d0
+        ! delta = 1.0d-3
+        ! sigmin = 1.0d-2
+        ! gamma = 5.0d0
 
         xk(:) = xinit(:)
 
@@ -139,11 +143,12 @@
 
     enddo
 
-    xk(:) = xbest
-    fovo = fovo_best
+    ! xk(:) = xbest
+    ! fovo = fovo_best
 
     call cpu_time(finish)
     
+    write(*,*) "Esta: ", fovo, iterations, n_eval
     write(*,"(A6,1X,ES10.3)") "fovo: ", fovo
     print*, "OVO function evaluations: ", n_eval
     write(*,"(A16,2X,F6.2)") "Execution time: ", finish - start
