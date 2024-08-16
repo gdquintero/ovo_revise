@@ -85,7 +85,7 @@
     t(:) = data(1,:)
     y(:) = data(2,:)
 
-    noutliers = 13
+    noutliers = 15
     q = samples - noutliers
 
     allocate(outliers(noutliers),stat=allocerr)
@@ -103,10 +103,10 @@
 
     close(100)
 
-    xinit(:) = (/1.3d0,0.65d0,0.65d0,0.7d0,0.6d0,3.d0,5.d0,7.d0,2.d0,4.5d0,5.5d0/)
+    ! xinit(:) = (/1.3d0,0.65d0,0.65d0,0.7d0,0.6d0,3.d0,5.d0,7.d0,2.d0,4.5d0,5.5d0/)
 
     seed = 123456.0d0
-    ntrials = 1000
+    ntrials = 1
     fovo_best = huge(1.0d0)
 
     call cpu_time(start)
@@ -120,19 +120,21 @@
 
         xk(:) = xinit(:)
 
-        do i = 1, n-1
-            xk(i) = xk(i) + (2.0d0 * drand(seed) - 1.0d0) * 5.0d-2 * max(1.0d0,abs(xk(i)))
-        enddo
+        ! do i = 1, n-1
+        !     xk(i) = xk(i) + (2.0d0 * drand(seed) - 1.0d0) * 1.0d-2 * max(1.0d0,abs(xk(i)))
+        ! enddo
 
         call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial,&
-        delta,sigmin,gamma,outliers,.false.,fovo,iterations,n_eval)
+        delta,sigmin,gamma,outliers,.true.,fovo,iterations,n_eval)
 
-        write(*,*) "En la ejecucion ",itrial," el valor de fovo fue ",fovo
+        if (ntrials .gt. 1) then
+            write(*,*) "En la ejecucion ",itrial," el valor de fovo fue ",fovo
 
-        if (fovo .lt. fovo_best) then
-            write(*,*) "Encontro una fovo mejor!"
-            fovo_best = fovo
-            xbest(:) = xk(:)
+            if (fovo .lt. fovo_best) then
+                write(*,*) "Encontro una fovo mejor!"
+                fovo_best = fovo
+                xbest(:) = xk(:)
+            endif
         endif
 
     enddo
@@ -176,12 +178,12 @@
         real(kind=8),   intent(inout) :: indices(samples),xtrial(n-1),fovo
         integer,        intent(inout) :: outliers(noutliers),iterations,n_eval
 
-        integer, parameter  :: max_iter = 100000, max_iter_sub = 1000, kflag = 2
+        integer, parameter  :: max_iter = 10000, max_iter_sub = 100, kflag = 2
         integer             :: iter,iter_sub,i,j
         real(kind=8)        :: gaux,terminate,alpha,epsilon
 
         alpha   = 1.0d-8
-        epsilon = 1.0d-4
+        epsilon = 1.0d-3
         iter    = 0 
         
         indices(:) = (/(i, i = 1, samples)/)
@@ -323,7 +325,7 @@
             fxk = fxtrial
             xk(1:n-1) = xtrial(1:n-1)
 
-            if (terminate .le. epsilon) exit
+            if (terminate .lt. epsilon) exit
             if (iter .ge. max_iter) exit
     
             call mount_Idelta(faux,delta,q,indices,samples,Idelta,m)

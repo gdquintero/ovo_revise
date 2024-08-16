@@ -38,7 +38,8 @@ def main(problem):
 
     else:
         df = pd.read_table(parent+"/data/osborne2.txt",delimiter=" ",header=None,skiprows=1)
-        popt, pcov = curve_fit(models.osborne2,df[0].values,df[1].values,p0 = 10. * np.ones(11))
+        init = np.array([1.3,0.65,0.65,0.7,0.6,3.,5.,7.,2.,4.5,5.5])
+        popt, pcov = curve_fit(models.osborne2,df[0].values,df[1].values,p0=init)
         
         with open(parent+"/output/sol_ls_osborne2.txt","w") as f:
             for i in range(11):
@@ -49,6 +50,7 @@ def main(problem):
         plt.plot(df[0].values,df[1].values,"ko",ms=2)
         plt.plot(t,models.osborne2(t,*popt),lw=1)
         plt.show()    
+        print(popt)
 
 main(2)
 
