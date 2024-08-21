@@ -85,9 +85,14 @@
     t(:) = data(1,:)
     y(:) = data(2,:)
 
-    Open(Unit= 100, file = 'param.txt')
-    read(100,*) delta,sigmin,gamma,noutliers
-    close(100)
+    ! Open(Unit= 100, file = 'param.txt')
+    ! read(100,*) delta,sigmin,gamma,noutliers
+    ! close(100)
+
+    noutliers = 13
+    delta = 0.005d0
+    sigmin = 0.1d0
+    gamma = 10.d0
 
     ! noutliers = 8
     q = samples - noutliers

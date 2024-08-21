@@ -83,8 +83,8 @@
     ! Number of days
     t(:) = data(1,:) ! Initial point
     ! t(:) = data(5,:) ! Midpoint
-    inf = 4
-    sup = 4
+    inf = 1
+    sup = 10
 
     allocate(outliers(3*samples*(sup-inf+1)),stat=allocerr)
 
@@ -124,12 +124,17 @@
             print*
             write(*,1100) "Number of outliers: ",noutliers
             ! xk(:) = 1.0d-1
-            xk(:) = (/0.197d0,0.287d0,0.021d0/)
+            ! xk(:) = (/0.197d0,0.287d0,0.021d0/)
+            xk(:) = (/0.379029d0,0.500859d0,0.016986d0/)
 
             ind = 1
             delta = 5.0d-4
             sigmin = 1.0d-1
             gamma = 5.0d0
+        
+            ! delta = 0.005d0
+            ! sigmin = 0.1d0
+            ! gamma = 10.d0
             
             call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial, &
             delta,sigmin,gamma,outliers(ind:ind+noutliers-1),fovo,iterations,n_eval)
@@ -160,7 +165,8 @@
             print*
             write(*,1100) "Number of outliers: ",noutliers
             ! xk(:) = 1.0d-1
-            xk(:) = (/0.156d0,0.250d0,0.0d0/)
+            ! xk(:) = (/0.156d0,0.250d0,0.0d0/)
+            xk(:) = (/0.285745d0,0.424520d0,0.005894d0/)
 
             ind = ind + noutliers
             ! delta = 5.0d-4
@@ -194,7 +200,8 @@
             print*
             write(*,1100) "Number of outliers: ",noutliers
             ! xk(:) = 1.0d-1
-            xk(:) = (/0.0628d0,0.178d0,0.020d0/)
+            ! xk(:) = (/0.0628d0,0.178d0,0.020d0/)
+            xk(:) = (/0.117309d0,0.341322d0,0.026605d0/)
 
             ind = ind + noutliers
 
@@ -256,7 +263,7 @@
         real(kind=8)        :: gaux1,gaux2,a,b,c,ebt,terminate,alpha,epsilon
 
         alpha   = 1.0d-8
-        epsilon = 1.0d-4
+        epsilon = 1.0d-3
         iter    = 0 
         
         indices(:) = (/(i, i = 1, samples)/)

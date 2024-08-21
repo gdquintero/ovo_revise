@@ -13,9 +13,13 @@ def main(problem):
     if problem == 1:
         df = pd.read_table(parent+"/data/seropositives.txt",delimiter=" ",header=None,skiprows=1)
 
-        popt_measles, pcov_measles  = curve_fit(models.F,df[0].values,df[1].values,p0=np.ones(3),bounds=(np.zeros(3),np.ones(3)))
-        popt_mumps, pcov_mumps      = curve_fit(models.F,df[0].values,df[2].values,p0=np.ones(3),bounds=(np.zeros(3),np.ones(3)))
-        popt_rubella, pcov_rubella  = curve_fit(models.F,df[0].values,df[3].values,p0=np.ones(3),bounds=(np.zeros(3),np.ones(3)))
+        init_measles = np.array([0.197,0.287,0.021])
+        init_mumps = np.array([0.156,0.250,0.0])
+        init_rubella = np.array([0.0628,0.178,0.020])
+
+        popt_measles, pcov_measles  = curve_fit(models.F,df[0].values,df[1].values,p0=init_measles,bounds=(np.zeros(3),np.ones(3)))
+        popt_mumps, pcov_mumps      = curve_fit(models.F,df[0].values,df[2].values,p0=init_mumps,bounds=(np.zeros(3),np.ones(3)))
+        popt_rubella, pcov_rubella  = curve_fit(models.F,df[0].values,df[3].values,p0=init_rubella,bounds=(np.zeros(3),np.ones(3)))
 
         with open(parent+"/output/sol_ls_farrington.txt","w") as f:
             f.write("%f %f %f\n" % (popt_measles[0],popt_measles[1],popt_measles[2]))
@@ -52,5 +56,5 @@ def main(problem):
         plt.show()    
         print(popt)
 
-main(2)
+main(1)
 
