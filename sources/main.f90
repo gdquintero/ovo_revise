@@ -83,7 +83,7 @@
     ! Number of days
     t(:) = data(1,:) ! Initial point
     ! t(:) = data(5,:) ! Midpoint
-    inf = 1
+    inf = 0
     sup = 10
 
     allocate(outliers(3*samples*(sup-inf+1)),stat=allocerr)
@@ -137,6 +137,7 @@
             delta,sigmin,gamma,outliers(ind:ind+noutliers-1),fovo,iterations,n_eval)
 
             call cpu_time(finish)
+            write(*,"(A6,1X,ES10.3)") "fovo: ", fovo
             print*, "OVO function evaluations: ", n_eval
             write(*,1111) "Execution time: ", finish - start
 
@@ -171,6 +172,7 @@
             delta,sigmin,gamma,outliers(ind:ind+noutliers-1),fovo,iterations,n_eval)
 
             call cpu_time(finish)
+            write(*,"(A6,1X,ES10.3)") "fovo: ", fovo
             print*, "OVO function evaluations: ", n_eval
             write(*,1111) "Execution time: ", finish - start
 
@@ -203,6 +205,7 @@
             delta,sigmin,gamma,outliers(ind:ind+noutliers-1),fovo,iterations,n_eval)
 
             call cpu_time(finish)
+            write(*,"(A6,1X,ES10.3)") "fovo: ", fovo
             print*, "OVO function evaluations: ", n_eval
             write(*,1111) "Execution time: ", finish - start
 

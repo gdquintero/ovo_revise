@@ -9,12 +9,11 @@ parent =  os.path.abspath(os.path.join(cwd,os.pardir))
 
 def plot_mixed(ind,t,inf,df_seropositives,df_mixed):
     disease = [r"Measles",r"Mumps",r"Rubella"]
-    plt.rcParams.update({'font.size': 12})
+    size_img = 0.6
+    plt.rcParams.update({'font.size': 11})
+    plt.rcParams['figure.figsize'] = [size_img * 6.4,size_img * 4.8]
     plt.rc('text', usetex=True)
     plt.rc('font', family='serif')
-    # plt.figure(figsize=(10,7))
-    # plt.xticks(fontsize=18)
-    # plt.yticks(fontsize=18)
     plt.ylim([0,1.05])
     
 
@@ -27,8 +26,8 @@ def plot_mixed(ind,t,inf,df_seropositives,df_mixed):
     l = plt.plot(df_seropositives[0].values,df_seropositives[ind].values,"ko")
     plt.setp(l, 'markersize', 6)
 
-    plt.savefig(disease[ind-1]+".pdf",bbox_inches = "tight")
-    plt.show()
+    plt.savefig(parent+"/images/"+disease[ind-1]+".pdf",bbox_inches = "tight")
+    # plt.show()
     plt.close()
 
 df_seropositives = pd.read_table(parent+"/data/seropositives.txt",delimiter=" ",header=None,skiprows=1)
