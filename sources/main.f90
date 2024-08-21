@@ -117,6 +117,10 @@
 
         y(:) = data(2,:)
 
+        delta = 1.0d-3
+        sigmin = 1.0d-1
+        gamma = 5.0d0
+
         do noutliers = out_inf,out_sup
             call cpu_time(start)
             q = samples - noutliers
@@ -128,13 +132,6 @@
             xk(:) = (/0.379029d0,0.500859d0,0.016986d0/)
 
             ind = 1
-            delta = 5.0d-4
-            sigmin = 1.0d-1
-            gamma = 5.0d0
-        
-            ! delta = 0.005d0
-            ! sigmin = 0.1d0
-            ! gamma = 10.d0
             
             call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial, &
             delta,sigmin,gamma,outliers(ind:ind+noutliers-1),fovo,iterations,n_eval)
@@ -169,9 +166,6 @@
             xk(:) = (/0.285745d0,0.424520d0,0.005894d0/)
 
             ind = ind + noutliers
-            ! delta = 5.0d-4
-            ! sigmin = 1.0d-1
-            ! gamma = 5.0d0
 
             call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial, &
             delta,sigmin,gamma,outliers(ind:ind+noutliers-1),fovo,iterations,n_eval)
@@ -204,10 +198,6 @@
             xk(:) = (/0.117309d0,0.341322d0,0.026605d0/)
 
             ind = ind + noutliers
-
-            ! delta = 1.0d-3
-            ! sigmin = 1.0d-1
-            ! gamma = 2.0d0
 
             call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial, &
             delta,sigmin,gamma,outliers(ind:ind+noutliers-1),fovo,iterations,n_eval)

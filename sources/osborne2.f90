@@ -90,9 +90,9 @@
     ! close(100)
 
     noutliers = 13
-    delta = 0.005d0
-    sigmin = 0.1d0
-    gamma = 10.d0
+    delta = 1.0d-3
+    sigmin = 1.0d-1
+    gamma = 5.0d0
 
     ! noutliers = 8
     q = samples - noutliers
@@ -123,9 +123,6 @@
     do itrial = 1,ntrials
         
         outliers(:) = 0
-        ! delta = 1.0d-3
-        ! sigmin = 1.0d-2
-        ! gamma = 5.0d0
 
         xk(:) = xinit(:)
 
