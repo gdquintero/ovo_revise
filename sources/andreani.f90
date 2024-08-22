@@ -35,7 +35,7 @@
     ! Set parameters
     read(100,*) samples
 
-    n = 12
+    n = 5
 
     allocate(t(samples),y(samples),x(n),xk(n-1),xbest(n-1),xtrial(n-1),l(n),u(n),xinit(n-1),data(2,samples),faux(samples),&
     indices(samples),Idelta(samples),nu_l(n-1),nu_u(n-1),opt_cond(n-1),stat=allocerr)

@@ -1,5 +1,5 @@
-rm -f salida.txt
-touch salida.txt
+rm -f salida.txt param.txt
+touch salida.txt param.txt
 
 export ALGENCAN=/opt/algencan-3.1.1
 rm -f osborne2
