@@ -85,16 +85,15 @@
     t(:) = data(1,:)
     y(:) = data(2,:)
 
-    ! Open(Unit= 100, file = 'param.txt')
-    ! read(100,*) delta,sigmin,gamma,noutliers
-    ! close(100)
+    Open(Unit= 100, file = 'param.txt')
+    read(100,*) delta,sigmin,gamma,noutliers
+    close(100)
 
-    noutliers = 0
-    delta = 1.0d-3
-    sigmin = 1.0d-1
-    gamma = 5.0d0
+    ! noutliers = 0
+    ! delta = 1.0d-3
+    ! sigmin = 1.0d-1
+    ! gamma = 5.0d0
 
-    ! noutliers = 8
     q = samples - noutliers
 
     allocate(outliers(noutliers),stat=allocerr)
