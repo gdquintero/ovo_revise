@@ -10,27 +10,34 @@ parent =  os.path.abspath(os.path.join(cwd,os.pardir))
 def plot_solutions(ind,df_seropositives,df_sol,sero_outliers,noutliers):
     t = np.linspace(0,70,1000)
     disease = [r"measles",r"mumps",r"rubella"]
-    plt.rcParams.update({'font.size': 12})
+    size_img = 0.6
+    plt.rcParams.update({'font.size': 11})
+    plt.rcParams['figure.figsize'] = [size_img * 6.4,size_img * 4.8]
     plt.rc('text', usetex=True)
     plt.rc('font', family='serif')
-    # plt.xticks(fontsize=18)
-    # plt.yticks(fontsize=18)
-    plt.ylim([0,1.05])
-    plt.plot(t,models.F(t,*df_sol.iloc[0].values))
-    plt.plot(sero_outliers[0],sero_outliers[1],'ro',mfc='none',ms=10)
+    plt.tick_params(axis='both',direction='in')
+    plt.xticks(np.arange(0,71,10))
+    plt.yticks(np.arange(0.2,1.1,0.2))
+    plt.ylim(0.0,1.03)
+    plt.xlim(-4.0,70)
+    plt.ylim([0,1.02])
+    plt.plot(df_seropositives[0].values,df_seropositives[ind].values,"ko",ms=3)
+    plt.plot(t,models.F(t,*df_sol.iloc[0].values),lw=1)
+    plt.plot(sero_outliers[0],sero_outliers[1],'ro',mfc='none',ms=6,mew=0.5)
+    
 
-    for i in range(noutliers):
-        point1 = [sero_outliers[0,i],models.F(sero_outliers[0,i],*df_sol.iloc[0].values)]
-        point2 = [sero_outliers[0,i],sero_outliers[1,i]]
-        x_values = [point1[0], point2[0]]
-        y_values = [point1[1], point2[1]]
-        plt.plot(x_values, y_values, 'k', linestyle="--")
+    # for i in range(noutliers):
+    #     point1 = [sero_outliers[0,i],models.F(sero_outliers[0,i],*df_sol.iloc[0].values)]
+    #     point2 = [sero_outliers[0,i],sero_outliers[1,i]]
+    #     x_values = [point1[0], point2[0]]
+    #     y_values = [point1[1], point2[1]]
+    #     plt.plot(x_values, y_values, 'k', linestyle="--")
 
-    l = plt.plot(df_seropositives[0].values,df_seropositives[ind].values,"ko")
-    plt.setp(l, 'markersize', 6)
+    
     # plt.title(disease[ind-1],fontsize = 18)
     plt.savefig(parent+"/images/"+disease[ind-1]+".pdf",bbox_inches = "tight")
-    plt.show()
+    # plt.show()
+    plt.close()
 
 df_seropositives = pd.read_table(parent+"/data/seropositives.txt",delimiter=" ",header=None,skiprows=1)
 df_mixed_measles = pd.read_table(parent+"/output/solutions_mixed_measles.txt",delimiter=" ",header=None,skiprows=0)

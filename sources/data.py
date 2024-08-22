@@ -8,11 +8,17 @@ parent =  os.path.abspath(os.path.join(cwd,os.pardir))
 
 def plot_seropositive(sero,x,y):
     # t = np.linspace(0,70,1000)
-    plt.rcParams.update({'font.size': 14})
+    size_img = 0.6
+    plt.rcParams.update({'font.size': 11})
+    plt.rcParams['figure.figsize'] = [size_img * 6.4,size_img * 4.8]
     plt.rc('text', usetex=True)
     plt.rc('font', family='serif')
-    plt.ylim([0,1.05])
-    plt.plot(x,y,"ko",ls=":")
+    plt.plot(x,y,"ko",ls=":",ms=3,lw=1)
+    plt.tick_params(axis='both',direction='in')
+    plt.xticks(np.arange(0,71,10))
+    plt.yticks(np.arange(0.2,1.1,0.2))
+    plt.ylim(0.0,1.05)
+    plt.xlim(-4.0,70)
 
     if sero == "measles":
         plt.savefig(parent+"/images/sero_measles.pdf",bbox_inches = "tight") 
@@ -21,7 +27,8 @@ def plot_seropositive(sero,x,y):
     else:
         plt.savefig(parent+"/images/sero_rubella.pdf",bbox_inches = "tight")
 
-    plt.show()
+    # plt.show()
+    plt.close()
 
 age = np.array([
     1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,17,19,21,23,25,27,29,31,33,35,40,45,55,65

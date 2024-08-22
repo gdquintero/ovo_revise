@@ -18,13 +18,15 @@ def plot_mixed(ind,t,inf,df_seropositives,df_mixed):
     
 
     for i in range(n):
-        plt.plot(t,models.F(t,*df_mixed.iloc[i].values),label="o = "+str(inf+i),linewidth=1.5)
-        # plt.title(disease[ind-1],fontsize = 18)
-        # plt.title(disease[ind-1])
-        plt.legend( loc='lower right')
+        plt.plot(df_seropositives[0].values,df_seropositives[ind].values,"ko",ms=3)
+        plt.plot(t,models.F(t,*df_mixed.iloc[i].values),label="o = "+str(inf+i),lw=1)
+        plt.tick_params(axis='both',direction='in')
+        plt.xticks(np.arange(0,71,10))
+        plt.yticks(np.arange(0.2,1.1,0.2))
+        plt.ylim(0.0,1.02)
+        plt.xlim(-4.0,70)
+        plt.legend(loc='lower right',prop={'size':7})
 
-    l = plt.plot(df_seropositives[0].values,df_seropositives[ind].values,"ko")
-    plt.setp(l, 'markersize', 6)
 
     plt.savefig(parent+"/images/"+disease[ind-1]+".pdf",bbox_inches = "tight")
     # plt.show()

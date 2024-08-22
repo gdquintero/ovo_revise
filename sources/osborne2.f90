@@ -89,7 +89,7 @@
     ! read(100,*) delta,sigmin,gamma,noutliers
     ! close(100)
 
-    noutliers = 13
+    noutliers = 0
     delta = 1.0d-3
     sigmin = 1.0d-1
     gamma = 5.0d0

@@ -83,7 +83,7 @@
     ! Number of days
     t(:) = data(1,:) ! Initial point
     ! t(:) = data(5,:) ! Midpoint
-    inf = 0
+    inf = 10
     sup = 10
 
     allocate(outliers(3*samples*(sup-inf+1)),stat=allocerr)
