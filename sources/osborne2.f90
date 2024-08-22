@@ -89,11 +89,6 @@
     read(100,*) delta,sigmin,gamma,noutliers
     close(100)
 
-    ! noutliers = 0
-    ! delta = 1.0d-3
-    ! sigmin = 1.0d-1
-    ! gamma = 5.0d0
-
     q = samples - noutliers
 
     allocate(outliers(noutliers),stat=allocerr)
@@ -110,8 +105,6 @@
     enddo
 
     close(100)
-
-    ! xinit(:) = (/1.3d0,0.65d0,0.65d0,0.7d0,0.6d0,3.d0,5.d0,7.d0,2.d0,4.5d0,5.5d0/)
 
     seed = 123456.0d0
     ntrials = 1
@@ -148,12 +141,8 @@
     ! fovo = fovo_best
 
     call cpu_time(finish)
-    
-    write(*,*) "Esta: ", fovo, iterations, n_eval
-    write(*,"(A6,1X,ES10.3)") "fovo: ", fovo
-    print*, "OVO function evaluations: ", n_eval
-    write(*,"(A16,2X,F6.2)") "Execution time: ", finish - start
-    print*, "Rodada con ", noutliers, "outliers"
+    write(*,100) "table", noutliers,"&",fovo,"&",iterations,"&",n_eval,"&",finish-start,"\\"
+    100 format (A5,1X,I2,1X,A1,1X,ES10.3,1X,A1,1X,I3,1X,A1,1X,I3,1X,A1,1X,ES10.3,1X,A2)
 
     Open(Unit = 98, File = trim(pwd)//"/../output/solution_osborne2.txt", ACCESS = "SEQUENTIAL")
     write(98,"(11F7.3)") xk(1),xk(2),xk(3),xk(4),xk(5),xk(6),xk(7),xk(8),xk(9),xk(10),xk(11)
