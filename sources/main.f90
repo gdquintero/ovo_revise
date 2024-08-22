@@ -4,7 +4,7 @@
     implicit none 
     
     integer :: allocerr,samples,inf,sup
-    real(kind=8) :: fxk,fxtrial,ti,sigma
+    real(kind=8) :: fxk,fxtrial,ti,sigma,delta,sigmin,gamma
     real(kind=8), allocatable :: xtrial(:),faux(:),indices(:),nu_l(:),nu_u(:),opt_cond(:),&
                                  xstar(:),y(:),data(:,:),t(:)
     integer, allocatable :: Idelta(:),outliers(:)
@@ -83,8 +83,13 @@
     ! Number of days
     t(:) = data(1,:) ! Initial point
     ! t(:) = data(5,:) ! Midpoint
-    inf = 10
-    sup = 10
+
+    Open(Unit= 100, file = 'param.txt')
+    read(100,*) delta,sigmin,gamma
+    close(100)
+
+    inf = 0
+    sup = 7
 
     allocate(outliers(3*samples*(sup-inf+1)),stat=allocerr)
 
@@ -95,31 +100,27 @@
 
     outliers(:) = 0
 
-    call mixed_test(inf,sup,outliers,t,y,indices,Idelta,samples,m,n,xtrial)
+    call mixed_test(inf,sup,delta,sigmin,gamma,outliers,t,y,indices,Idelta,samples,m,n,xtrial)
 
     call export(xtrial,outliers,sup)
 
     CONTAINS
 
-    subroutine mixed_test(out_inf,out_sup,outliers,t,y,indices,Idelta,samples,m,n,xtrial)
+    subroutine mixed_test(out_inf,out_sup,delta,sigmin,gamma,outliers,t,y,indices,Idelta,samples,m,n,xtrial)
         implicit none
 
         integer,        intent(in) :: samples,n,out_inf,out_sup
-        real(kind=8),   intent(in) :: t(samples)
+        real(kind=8),   intent(in) :: t(samples),delta,sigmin,gamma
         integer,        intent(inout) :: Idelta(samples),outliers(3*samples*(sup-inf+1)),m
         real(kind=8),   intent(inout) :: indices(samples),xtrial(n-1),y(samples)
 
-        integer :: noutliers,q,iterations,ind,n_eval
-        real(kind=8) :: fovo,delta,sigmin,gamma,start,finish
+        integer :: noutliers,q,ind,iterations,n_eval
+        real(kind=8) :: fovo,start,finish
 
         print*
         Print*, "OVO Algorithm for Measles"
 
         y(:) = data(2,:)
-
-        delta = 1.0d-3
-        sigmin = 1.0d-1
-        gamma = 5.0d0
 
         do noutliers = out_inf,out_sup
             call cpu_time(start)
@@ -127,8 +128,6 @@
 
             print*
             write(*,1100) "Number of outliers: ",noutliers
-            ! xk(:) = 1.0d-1
-            ! xk(:) = (/0.197d0,0.287d0,0.021d0/)
             xk(:) = (/0.379029d0,0.500859d0,0.016986d0/)
 
             ind = 1
@@ -137,18 +136,13 @@
             delta,sigmin,gamma,outliers(ind:ind+noutliers-1),fovo,iterations,n_eval)
 
             call cpu_time(finish)
-            write(*,"(A6,1X,ES10.3)") "fovo: ", fovo
-            print*, "OVO function evaluations: ", n_eval
-            write(*,1111) "Execution time: ", finish - start
 
             Open(Unit = 100, File =trim(pwd)//"/../output/solutions_mixed_measles.txt", ACCESS = "SEQUENTIAL")
-            Open(Unit = 300, File =trim(pwd)//"/../output/fobj_mixed_measles.txt", ACCESS = "SEQUENTIAL")
-            Open(Unit = 400, File =trim(pwd)//"/../output/iterations_mixed_measles.txt", ACCESS = "SEQUENTIAL")
             Open(Unit = 600, File =trim(pwd)//"/../output/outliers.txt", ACCESS = "SEQUENTIAL")
 
             write(100,1000) xtrial(1), xtrial(2), xtrial(3)
-            write(300,*) fovo
-            write(400,*) iterations
+
+            write(*,1300) "table_farrington", noutliers,"&",fovo,"&",iterations,"&",n_eval,"&",finish-start,"\\"
             
         enddo
 
@@ -162,8 +156,6 @@
             q = samples - noutliers
             print*
             write(*,1100) "Number of outliers: ",noutliers
-            ! xk(:) = 1.0d-1
-            ! xk(:) = (/0.156d0,0.250d0,0.0d0/)
             xk(:) = (/0.285745d0,0.424520d0,0.005894d0/)
 
             ind = ind + noutliers
@@ -172,17 +164,12 @@
             delta,sigmin,gamma,outliers(ind:ind+noutliers-1),fovo,iterations,n_eval)
 
             call cpu_time(finish)
-            write(*,"(A6,1X,ES10.3)") "fovo: ", fovo
-            print*, "OVO function evaluations: ", n_eval
-            write(*,1111) "Execution time: ", finish - start
 
             Open(Unit = 110, File =trim(pwd)//"/../output/solutions_mixed_mumps.txt", ACCESS = "SEQUENTIAL")
-            Open(Unit = 310, File =trim(pwd)//"/../output/fobj_mixed_mumps.txt", ACCESS = "SEQUENTIAL")
-            Open(Unit = 410, File =trim(pwd)//"/../output/iterations_mixed_mumps.txt", ACCESS = "SEQUENTIAL")
 
             write(110,1000) xtrial(1), xtrial(2), xtrial(3)
-            write(310,*) fovo
-            write(410,*) iterations
+
+            write(*,1300) "table_farrington", noutliers,"&",fovo,"&",iterations,"&",n_eval,"&",finish-start,"\\"
         enddo
 
         print*
@@ -195,8 +182,6 @@
             q = samples - noutliers
             print*
             write(*,1100) "Number of outliers: ",noutliers
-            ! xk(:) = 1.0d-1
-            ! xk(:) = (/0.0628d0,0.178d0,0.020d0/)
             xk(:) = (/0.117309d0,0.341322d0,0.026605d0/)
 
             ind = ind + noutliers
@@ -205,17 +190,12 @@
             delta,sigmin,gamma,outliers(ind:ind+noutliers-1),fovo,iterations,n_eval)
 
             call cpu_time(finish)
-            write(*,"(A6,1X,ES10.3)") "fovo: ", fovo
-            print*, "OVO function evaluations: ", n_eval
-            write(*,1111) "Execution time: ", finish - start
 
             Open(Unit = 120, File =trim(pwd)//"/../output/solutions_mixed_rubella.txt", ACCESS = "SEQUENTIAL")
-            Open(Unit = 320, File =trim(pwd)//"/../output/fobj_mixed_rubella.txt", ACCESS = "SEQUENTIAL")
-            Open(Unit = 420, File =trim(pwd)//"/../output/iterations_mixed_rubella.txt", ACCESS = "SEQUENTIAL")
 
             write(120,1000) xtrial(1), xtrial(2), xtrial(3)
-            write(320,*) fovo
-            write(420,*) iterations
+
+            write(*,1300) "table_farrington", noutliers,"&",fovo,"&",iterations,"&",n_eval,"&",finish-start,"\\"
     
         enddo
         
@@ -226,15 +206,9 @@
         1000 format (ES12.6,1X,ES12.6,1X,ES12.6)
         1100 format (1X,A20,I2)
         1200 format (I2)
-        1111 format (A16,2X,F4.2)
+        1300 format (A16,1X,I2,1X,A1,1X,ES10.3,1X,A1,1X,I3,1X,A1,1X,I3,1X,A1,1X,ES10.3,1X,A2)
 
-        close(100)
-        close(110)
-        close(120)
-        close(300)
-        close(310)
-        close(320)
-        close(500)
+        
         
     end subroutine mixed_test
 
