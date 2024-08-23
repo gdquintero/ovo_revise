@@ -5,11 +5,11 @@ export ALGENCAN=/opt/algencan-3.1.1
 rm -f andreani
 gfortran -O3 -w -fcheck=all -g andreani.f90 -L$ALGENCAN/lib -lalgencan -lhsl sort.o subset.o -o andreani
 
-delta=0.1
-sigmin=0.1
-gamma=5
+delta=0.001d0
+sigmin=0.1d0
+gamma=5.d0
 
-for noutliers in {3..26}
+for noutliers in {10..10}
   do
     echo $delta $sigmin $gamma $noutliers  > param.txt
     ./andreani

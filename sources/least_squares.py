@@ -38,7 +38,7 @@ def main(problem):
             
         print("Mean squared error for Measles:","{:.3e}".format(error_measles))
         print("Mean squared error for Mumps:","{:.3e}".format(error_mumps))
-        print("Mean squared error for Rubella:","{:.3e}".format(error_rubella))
+        print("Mean squared error for Rubella:","{:.3e}".format(error_rubella))  
 
     elif problem == 2:
         df = pd.read_table(parent+"/data/osborne2.txt",delimiter=" ",header=None,skiprows=1)
