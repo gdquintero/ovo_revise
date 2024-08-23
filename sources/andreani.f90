@@ -4,11 +4,11 @@
     implicit none 
     
     integer :: allocerr,samples,noutliers,q,iterations,n_eval
-    real(kind=8) :: fxk,fxtrial,ti,sigma,fovo_best
+    real(kind=8) :: fxk,fxtrial,ti,sigma
     real(kind=8), allocatable :: xtrial(:),faux(:),indices(:),nu_l(:),nu_u(:),opt_cond(:),&
                                  xinit(:),y(:),data(:,:),t(:),xbest(:)
     integer, allocatable :: Idelta(:),outliers(:)
-    real(kind=8) :: fovo,delta,sigmin,gamma,start,finish,seed
+    real(kind=8) :: fovo,delta,sigmin,gamma,start,finish
     
     ! LOCAL SCALARS
     logical :: checkder
@@ -23,14 +23,13 @@
     logical,        pointer :: equatn(:),linear(:)
     real(kind=8),   pointer :: lambda(:)
 
-    integer :: i,itrial,ntrials
-    real(kind=8), dimension(3,3) :: solutions
+    integer :: i
 
     character(len=128) :: pwd
     call get_environment_variable('PWD',pwd)
 
     ! Reading data and storing it in the variables t and y
-    Open(Unit = 100, File = trim(pwd)//"/../data/osborne2.txt", ACCESS = "SEQUENTIAL")
+    Open(Unit = 100, File = trim(pwd)//"/../data/andreani.txt", ACCESS = "SEQUENTIAL")
 
     ! Set parameters
     read(100,*) samples
@@ -78,14 +77,14 @@
     nvparam   = 0
     vparam(1) = 'ITERATIONS-OUTPUT-DETAIL 0' 
 
-    l(1:n) = -1.0d+20
-    u(1:n-1) = 1.0d+20; u(n) = 0.0d0
+    l(1:n-1) = -10.0d0; l(n) = -1.0d+20
+    u(1:n-1) = 10.0d0; u(n) = 0.0d0
 
     ! Number of days
     t(:) = data(1,:)
     y(:) = data(2,:)
 
-    Open(Unit= 100, file = 'param.txt')
+    Open(Unit = 100, file = 'param.txt')
     read(100,*) delta,sigmin,gamma,noutliers
     close(100)
 
@@ -98,56 +97,30 @@
         stop
     end if
 
-    Open(Unit = 100, File = trim(pwd)//"/../output/sol_ls_osborne2.txt", ACCESS = "SEQUENTIAL")
-
-    do i = 1, n-1
-        read(100,*) xinit(i)
-    enddo
-
-    close(100)
-
-    seed = 123456.0d0
-    ntrials = 1
-    fovo_best = huge(1.0d0)
+    ! xinit(:) = (/-1.0d0,-2.0d0,1.0d0,-1.0d0/)
+    xinit(:) = (/6.4602d0,2.7072d0,-7.5418d0,2.1604d0/)
+    xinit = 1.d0
 
     call cpu_time(start)
-
-    do itrial = 1,ntrials
         
-        outliers(:) = 0
+    outliers(:) = 0
 
-        xk(:) = xinit(:)
+    xk(:) = xinit(:)
 
-        ! do i = 1, n-1
-        !     xk(i) = xk(i) + (2.0d0 * drand(seed) - 1.0d0) * 1.0d-2 * max(1.0d0,abs(xk(i)))
-        ! enddo
-
-        call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial,&
-        delta,sigmin,gamma,outliers,.true.,fovo,iterations,n_eval)
-
-        if (ntrials .gt. 1) then
-            write(*,*) "En la ejecucion ",itrial," el valor de fovo fue ",fovo
-
-            if (fovo .lt. fovo_best) then
-                write(*,*) "Encontro una fovo mejor!"
-                fovo_best = fovo
-                xbest(:) = xk(:)
-            endif
-        endif
-
-    enddo
-
-    ! xk(:) = xbest
-    ! fovo = fovo_best
+    call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial,&
+    delta,sigmin,gamma,outliers,.false.,fovo,iterations,n_eval)
 
     call cpu_time(finish)
-    write(*,100) "table", noutliers,"&",fovo,"&",iterations,"&",n_eval,"&",finish-start,"\\"
+
+    write(*,100) "esta", noutliers,"&",fovo,"&",iterations,"&",n_eval,"&",finish-start,"\\"
     100 format (A5,1X,I2,1X,A1,1X,ES10.3,1X,A1,1X,I3,1X,A1,1X,I3,1X,A1,1X,ES10.3,1X,A2)
 
-    Open(Unit = 98, File = trim(pwd)//"/../output/solution_osborne2.txt", ACCESS = "SEQUENTIAL")
-    write(98,"(11F7.3)") xk(1),xk(2),xk(3),xk(4),xk(5),xk(6),xk(7),xk(8),xk(9),xk(10),xk(11)
+    ! print*, xk
 
-    Open(Unit = 99, File = trim(pwd)//"/../output/outliers_osborne2.txt", ACCESS = "SEQUENTIAL")
+    Open(Unit = 98, File = trim(pwd)//"/../output/solution_andreani.txt", ACCESS = "SEQUENTIAL")
+    write(98,"(11F7.3)") xk(1),xk(2),xk(3),xk(4)
+
+    Open(Unit = 99, File = trim(pwd)//"/../output/outliers_andreani.txt", ACCESS = "SEQUENTIAL")
     write(99,"(I2)") noutliers
 
     do i = 1, noutliers
@@ -229,18 +202,10 @@
                 call model(xk,Idelta(i),n,t,samples,gaux)
 
                 gaux = gaux - y(Idelta(i))
-    
-                grad(i,1) = exp(-ti * xk(5))
-                grad(i,2) = exp(-xk(6) * (ti - xk(9))**2)
-                grad(i,3) = exp(-xk(7) * (ti - xk(10))**2)
-                grad(i,4) = exp(-xk(8) * (ti - xk(11))**2)
-                grad(i,5) = -ti * x(1) * exp(-ti * x(5))
-                grad(i,6) = (-x(2) * (ti - x(9))**2) * exp(-x(6) * (ti - x(9))**2)
-                grad(i,7) = (-x(3) * (ti - x(10))**2) * exp(-x(7) * (ti - x(10))**2)
-                grad(i,8) = (-x(4) * (ti - x(11))**2) * exp(-x(8) * (ti - x(11))**2)
-                grad(i,9) = 2.d0 * x(2) * x(6) * (ti - x(9)) * exp(-x(6) * (ti - x(9))**2)
-                grad(i,10) = 2.d0 * x(3) * x(7) * (ti - x(10)) * exp(-x(7) * (ti - x(10))**2)
-                grad(i,11) = 2.d0 * x(4) * x(8) * (ti - x(11)) * exp(-x(8) * (ti - x(11))**2)
+                grad(i,1) = 1.0d0
+                grad(i,2) = ti
+                grad(i,3) = ti**2
+                grad(i,4) = ti**3
     
                 grad(i,:) = gaux * grad(i,:)
             end do
@@ -278,7 +243,8 @@
                 n_eval = n_eval + 1
         
                 ! Test the sufficient descent condition
-                if (fxtrial .le. (fxk - alpha * norm2(xtrial(1:n-1) - xk(1:n-1))**2)) exit
+                ! if (fxtrial .le. (fxk - alpha * norm2(xtrial(1:n-1) - xk(1:n-1))**2)) exit
+                if (fxtrial .le. (fxk - alpha * dot_product(xtrial(1:n-1) - xk(1:n-1),xtrial(1:n-1) - xk(1:n-1)))) exit
                 if (iter_sub .ge. max_iter_sub) exit
     
                 sigma = gamma * sigma
@@ -421,8 +387,7 @@
         real(kind=8),   intent(in) :: x(n-1),t(samples)
         real(kind=8),   intent(out) :: res
 
-        res = x(1) * exp(-t(i) * x(5)) + x(2) * exp(-x(6) * (t(i) - x(9))**2) + &
-        x(3) * exp(-x(7) * (t(i) - x(10))**2) + x(4) * exp(-x(8) * (t(i) - x(11))**2)
+        res = x(1) + (x(2) * t(i)) + (x(3) * (t(i)**2)) + (x(4) * (t(i)**3))
 
     end subroutine model
 

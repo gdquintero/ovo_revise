@@ -40,7 +40,7 @@ def main(problem):
         print("Mean squared error for Mumps:","{:.3e}".format(error_mumps))
         print("Mean squared error for Rubella:","{:.3e}".format(error_rubella))
 
-    else:
+    elif problem == 2:
         df = pd.read_table(parent+"/data/osborne2.txt",delimiter=" ",header=None,skiprows=1)
         init = np.array([1.3,0.65,0.65,0.7,0.6,3.,5.,7.,2.,4.5,5.5])
         popt, pcov = curve_fit(models.osborne2,df[0].values,df[1].values,p0=init)
@@ -56,5 +56,22 @@ def main(problem):
         plt.show()    
         print(popt)
 
-main(1)
+    else:
+
+        df = pd.read_table(parent+"/data/andreani.txt",delimiter=" ",header=None,skiprows=1)
+        init = np.array([-1.0,-2.0,1.0,-1.0])
+        popt, pcov = curve_fit(models.andreani,df[0].values,df[1].values,p0=init)
+        
+        with open(parent+"/output/sol_ls_andreani.txt","w") as f:
+            for i in range(4):
+                f.write("%f\n" % popt[i])
+
+        t = np.linspace(df[0].values[0],df[0].values[-1],1000)
+
+        plt.plot(df[0].values,df[1].values,"ko",ms=2)
+        plt.plot(t,models.andreani(t,*popt),lw=1)
+        plt.show()    
+        print(popt)
+
+main(3)
 

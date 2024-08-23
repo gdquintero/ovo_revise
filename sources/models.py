@@ -10,3 +10,6 @@ def osborne2(t,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11):
         x3 * np.exp(-x7 * (t - x10)**2) + x4 * np.exp(-x8 * (t - x11)**2)
     
     return y
+
+def andreani(t,x1,x2,x3,x4):
+    return x1 + (x2 * t) + (x3 * (t**2)) + (x4 * (t**3))
