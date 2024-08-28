@@ -23,9 +23,13 @@ gfortran -O3 -w -fcheck=all -g osborne2.f90 -L$ALGENCAN/lib -lalgencan -lhsl sor
 #   done
 # done
 
-delta=0.001
-sigmin=0.1
-gamma=5
+delta=1.0d-3
+sigmin=1.0d-1
+gamma=5.0d0
+
+# delta=1.0d-1
+# sigmin=1.0d-2
+# gamma=2.0d0
 
 for noutliers in {0..15}
   do

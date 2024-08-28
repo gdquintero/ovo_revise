@@ -73,5 +73,5 @@ def main(problem):
         plt.show()    
         print(popt)
 
-main(3)
+main(2)
 

@@ -7,7 +7,7 @@
     real(kind=8) :: fxk,fxtrial,ti,sigma,fovo_best
     real(kind=8), allocatable :: xtrial(:),faux(:),indices(:),nu_l(:),nu_u(:),opt_cond(:),&
                                  xinit(:),y(:),data(:,:),t(:),xbest(:)
-    integer, allocatable :: Idelta(:),outliers(:)
+    integer, allocatable :: Idelta(:),outliers(:),outliers_best(:)
     real(kind=8) :: fovo,delta,sigmin,gamma,start,finish,seed
     
     ! LOCAL SCALARS
@@ -91,7 +91,7 @@
 
     q = samples - noutliers
 
-    allocate(outliers(noutliers),stat=allocerr)
+    allocate(outliers(noutliers),outliers_best(noutliers),stat=allocerr)
 
     if ( allocerr .ne. 0 ) then
         write(*,*) 'Allocation error in main program'
@@ -107,7 +107,7 @@
     close(100)
 
     seed = 123456.0d0
-    ntrials = 1
+    ntrials = 100
     fovo_best = huge(1.0d0)
 
     call cpu_time(start)
@@ -119,30 +119,29 @@
         xk(:) = xinit(:)
 
         ! do i = 1, n-1
-        !     xk(i) = xk(i) + (2.0d0 * drand(seed) - 1.0d0) * 1.0d-2 * max(1.0d0,abs(xk(i)))
+        !     xk(i) = xk(i) + (2.0d0 * drand(seed) - 1.0d0) * 5.0d-1 * max(1.0d0,abs(xk(i)))
         ! enddo
 
         call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial,&
         delta,sigmin,gamma,outliers,.true.,fovo,iterations,n_eval)
 
-        if (ntrials .gt. 1) then
-            write(*,*) "En la ejecucion ",itrial," el valor de fovo fue ",fovo
+        write(*,*) "En la ejecucion ",itrial," el valor de fovo fue ",fovo
 
-            if (fovo .lt. fovo_best) then
-                write(*,*) "Encontro una fovo mejor!"
-                fovo_best = fovo
-                xbest(:) = xk(:)
-            endif
+        if (fovo .lt. fovo_best) then
+            write(*,*) "Encontro una fovo mejor!"
+            fovo_best = fovo
+            xbest(:) = xk(:)
         endif
 
     enddo
 
-    ! xk(:) = xbest
-    ! fovo = fovo_best
+    xk = xbest
+    outliers = outliers_best
+    fovo = fovo_best
 
     call cpu_time(finish)
-    write(*,100) "table", noutliers,"&",fovo,"&",iterations,"&",n_eval,"&",finish-start,"\\"
-    100 format (A5,1X,I2,1X,A1,1X,ES10.3,1X,A1,1X,I3,1X,A1,1X,I3,1X,A1,1X,ES10.3,1X,A2)
+    write(*,100) "esta", noutliers,"&",fovo,"&",iterations,"&",n_eval,"&",finish-start,"\\"
+    100 format (A5,1X,I2,1X,A1,1X,ES10.3,1X,A1,1X,I3,1X,A1,1X,I4,1X,A1,1X,ES10.3,1X,A2)
 
     Open(Unit = 98, File = trim(pwd)//"/../output/solution_osborne2.txt", ACCESS = "SEQUENTIAL")
     write(98,"(11F7.3)") xk(1),xk(2),xk(3),xk(4),xk(5),xk(6),xk(7),xk(8),xk(9),xk(10),xk(11)
