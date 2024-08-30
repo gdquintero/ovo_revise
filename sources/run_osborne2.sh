@@ -11,9 +11,9 @@ gfortran -O3 -w -fcheck=all -g osborne2.f90 -L$ALGENCAN/lib -lalgencan -lhsl sor
 #   do
 #     for gamma in 2 5 10
 #     do
-#       echo 'Esta=============================' >> salida.txt
-#       echo 'Esta=====',$delta $sigmin $gamma  >> salida.txt
-#       echo 'Esta=============================' >> salida.txt
+#       echo 'esta=============================' >> salida.txt
+#       echo 'esta=====',$delta $sigmin $gamma  >> salida.txt
+#       echo 'esta=============================' >> salida.txt
 #       for noutliers in {0..15}
 #       do
 #         echo $delta $sigmin $gamma $noutliers > param.txt
@@ -25,13 +25,9 @@ gfortran -O3 -w -fcheck=all -g osborne2.f90 -L$ALGENCAN/lib -lalgencan -lhsl sor
 
 delta=1.0d-3
 sigmin=1.0d-1
-gamma=5.0d0
+gamma=5.d0
 
-# delta=1.0d-1
-# sigmin=1.0d-2
-# gamma=2.0d0
-
-for noutliers in {0..15}
+for noutliers in {13..13}
   do
     echo $delta $sigmin $gamma $noutliers  > param.txt
     ./osborne2 >> salida.txt

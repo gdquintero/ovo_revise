@@ -88,8 +88,8 @@
     read(100,*) delta,sigmin,gamma
     close(100)
 
-    inf = 0
-    sup = 7
+    inf = 5
+    sup = 5
 
     allocate(outliers(3*samples*(sup-inf+1)),stat=allocerr)
 
@@ -142,7 +142,7 @@
 
             write(100,1000) xtrial(1), xtrial(2), xtrial(3)
 
-            write(*,1300) "table_farrington", noutliers,"&",fovo,"&",iterations,"&",n_eval,"&",finish-start,"\\"
+            write(*,1300) "esta", noutliers,"&",fovo,"&",iterations,"&",n_eval,"&",finish-start,"\\"
             
         enddo
 
@@ -169,7 +169,7 @@
 
             write(110,1000) xtrial(1), xtrial(2), xtrial(3)
 
-            write(*,1300) "table_farrington", noutliers,"&",fovo,"&",iterations,"&",n_eval,"&",finish-start,"\\"
+            write(*,1300) "esta", noutliers,"&",fovo,"&",iterations,"&",n_eval,"&",finish-start,"\\"
         enddo
 
         print*
@@ -195,7 +195,7 @@
 
             write(120,1000) xtrial(1), xtrial(2), xtrial(3)
 
-            write(*,1300) "table_farrington", noutliers,"&",fovo,"&",iterations,"&",n_eval,"&",finish-start,"\\"
+            write(*,1300) "esta", noutliers,"&",fovo,"&",iterations,"&",n_eval,"&",finish-start,"\\"
     
         enddo
         

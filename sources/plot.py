@@ -36,7 +36,7 @@ def plot_solutions(ind,df_seropositives,df_sol,sero_outliers,noutliers):
     
     # plt.title(disease[ind-1],fontsize = 18)
     plt.savefig(parent+"/images/"+disease[ind-1]+".pdf",bbox_inches = "tight")
-    # plt.show()
+    plt.show()
     plt.close()
 
 df_seropositives = pd.read_table(parent+"/data/seropositives.txt",delimiter=" ",header=None,skiprows=1)

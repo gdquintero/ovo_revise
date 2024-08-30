@@ -4,7 +4,7 @@
     implicit none 
     
     integer :: allocerr,samples,noutliers,q,iterations,n_eval,ntrials,itrial
-    real(kind=8) :: fxk,fxtrial,ti,sigma,seed,fovo_best,inf,sup
+    real(kind=8) :: fxk,fxtrial,ti,sigma,seed,fovo_best,inf,sup,time_best,tiempo
     real(kind=8), allocatable :: xtrial(:),faux(:),indices(:),nu_l(:),nu_u(:),opt_cond(:),&
                                  xinit(:),y(:),data(:,:),t(:),xbest(:)
     integer, allocatable :: Idelta(:),outliers(:),outliers_best(:)
@@ -97,12 +97,11 @@
         stop
     end if
 
-    xinit(:) = (/0.0d0,2.0d0,-3.0d0,1.0d0/)
+    ! xinit(:) = (/0.0d0,2.0d0,-3.0d0,1.0d0/)
     ! xinit(:) = (/-1.0d0,-2.0d0,1.0d0,-1.0d0/)
-    ! xinit(:) = (/6.4602d0,2.7072d0,-7.5418d0,2.1604d0/)
+    xinit(:) = (/6.4602d0,2.7072d0,-7.5418d0,2.1604d0/)
     ! xinit = 1.d0
 
-    call cpu_time(start)
         
     outliers(:) = 0
 
@@ -122,13 +121,17 @@
             xk(i) = xk(i) + (2.0d0 * drand(seed) - 1.0d0) * 5.0d-1 * max(1.0d0,abs(xk(i)))
         enddo
 
+        call cpu_time(start)
         call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial,&
         delta,sigmin,gamma,outliers,.true.,fovo,iterations,n_eval)
+        call cpu_time(finish)
+        tiempo = finish - start
 
         if (ntrials .gt. 1) then
             write(*,*) "En la ejecucion ",itrial," el valor de fovo fue ",fovo
 
             if (fovo .lt. fovo_best) then
+                time_best = tiempo
                 write(*,*) "Encontro una fovo mejor!"
                 fovo_best = fovo
                 xbest(:) = xk(:)
@@ -138,17 +141,18 @@
 
     enddo
 
-    call cpu_time(finish)
+    xk = xbest
+    outliers = outliers_best
+    fovo = fovo_best
+    tiempo = time_best
 
-    write(*,100) "esta", noutliers,"&",fovo,"&",iterations,"&",n_eval,"&",finish-start,"\\"
+    write(*,100) "esta", noutliers,"&",fovo,"&",iterations,"&",n_eval,"&",tiempo,"\\"
     100 format (A5,1X,I2,1X,A1,1X,ES10.3,1X,A1,1X,I3,1X,A1,1X,I4,1X,A1,1X,ES10.3,1X,A2)
 
     ! print*, "El valor de la fovo_best es", fovo_best
     ! print*, "Solucion", xk
 
-    xk = xbest
-    outliers = outliers_best
-    fovo = fovo_best
+
 
     Open(Unit = 98, File = trim(pwd)//"/../output/solution_andreani.txt", ACCESS = "SEQUENTIAL")
     write(98,"(11F7.3)") xk(1),xk(2),xk(3),xk(4)

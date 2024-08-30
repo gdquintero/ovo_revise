@@ -56,7 +56,7 @@ def main(problem):
         plt.show()    
         print(popt)
 
-    else:
+    elif problem == 3:
 
         df = pd.read_table(parent+"/data/andreani.txt",delimiter=" ",header=None,skiprows=1)
         init = np.array([-1.0,-2.0,1.0,-1.0])
@@ -73,5 +73,21 @@ def main(problem):
         plt.show()    
         print(popt)
 
-main(2)
+    else:
+        df = pd.read_table(parent+"/data/andreani100.txt",delimiter=" ",header=None,skiprows=1)
+        init = np.array([-1.0,-2.0,1.0,-1.0])
+        popt, pcov = curve_fit(models.andreani,df[0].values,df[1].values,p0=init)
+        
+        with open(parent+"/output/sol_ls_andreani_scaled.txt","w") as f:
+            for i in range(4):
+                f.write("%f\n" % popt[i])
+
+        t = np.linspace(df[0].values[0],df[0].values[-1],1000)
+
+        plt.plot(df[0].values,df[1].values,"ko",ms=2)
+        plt.plot(t,models.andreani(t,*popt),lw=1)
+        plt.show()    
+        print(popt)
+
+main(4)
 

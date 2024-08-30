@@ -107,7 +107,7 @@
     close(100)
 
     seed = 123456.0d0
-    ntrials = 100
+    ntrials = 1
     fovo_best = huge(1.0d0)
 
     call cpu_time(start)
@@ -119,11 +119,11 @@
         xk(:) = xinit(:)
 
         ! do i = 1, n-1
-        !     xk(i) = xk(i) + (2.0d0 * drand(seed) - 1.0d0) * 5.0d-1 * max(1.0d0,abs(xk(i)))
+        !     xk(i) = xk(i) + (2.0d0 * drand(seed) - 1.0d0) * 5.0d-2 * max(1.0d0,abs(xk(i)))
         ! enddo
 
         call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial,&
-        delta,sigmin,gamma,outliers,.true.,fovo,iterations,n_eval)
+        delta,sigmin,gamma,outliers,.false.,fovo,iterations,n_eval)
 
         write(*,*) "En la ejecucion ",itrial," el valor de fovo fue ",fovo
 
@@ -135,9 +135,9 @@
 
     enddo
 
-    xk = xbest
-    outliers = outliers_best
-    fovo = fovo_best
+    ! xk = xbest
+    ! outliers = outliers_best
+    ! fovo = fovo_best
 
     call cpu_time(finish)
     write(*,100) "esta", noutliers,"&",fovo,"&",iterations,"&",n_eval,"&",finish-start,"\\"
