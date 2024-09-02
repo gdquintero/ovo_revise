@@ -4,11 +4,11 @@
     implicit none 
     
     integer :: allocerr,samples,noutliers,q,iterations,n_eval
-    real(kind=8) :: fxk,fxtrial,ti,sigma,fovo_best
+    real(kind=8) :: fxk,fxtrial,ti,sigma
     real(kind=8), allocatable :: xtrial(:),faux(:),indices(:),nu_l(:),nu_u(:),opt_cond(:),&
                                  xinit(:),y(:),data(:,:),t(:),xbest(:)
     integer, allocatable :: Idelta(:),outliers(:),outliers_best(:)
-    real(kind=8) :: fovo,delta,sigmin,gamma,start,finish,seed
+    real(kind=8) :: fovo,delta,sigmin,gamma,start,finish
     
     ! LOCAL SCALARS
     logical :: checkder
@@ -23,7 +23,7 @@
     logical,        pointer :: equatn(:),linear(:)
     real(kind=8),   pointer :: lambda(:)
 
-    integer :: i,itrial,ntrials
+    integer :: i
     real(kind=8), dimension(3,3) :: solutions
 
     character(len=128) :: pwd
@@ -106,40 +106,15 @@
 
     close(100)
 
-    seed = 123456.0d0
-    ntrials = 1
-    fovo_best = huge(1.0d0)
-
+    outliers(:) = 0
+    xk(:) = xinit(:)
     call cpu_time(start)
 
-    do itrial = 1,ntrials
-        
-        outliers(:) = 0
-
-        xk(:) = xinit(:)
-
-        ! do i = 1, n-1
-        !     xk(i) = xk(i) + (2.0d0 * drand(seed) - 1.0d0) * 5.0d-2 * max(1.0d0,abs(xk(i)))
-        ! enddo
-
-        call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial,&
+    call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial,&
         delta,sigmin,gamma,outliers,.false.,fovo,iterations,n_eval)
 
-        write(*,*) "En la ejecucion ",itrial," el valor de fovo fue ",fovo
-
-        if (fovo .lt. fovo_best) then
-            write(*,*) "Encontro una fovo mejor!"
-            fovo_best = fovo
-            xbest(:) = xk(:)
-        endif
-
-    enddo
-
-    ! xk = xbest
-    ! outliers = outliers_best
-    ! fovo = fovo_best
-
     call cpu_time(finish)
+    
     write(*,100) "esta", noutliers,"&",fovo,"&",iterations,"&",n_eval,"&",finish-start,"\\"
     100 format (A5,1X,I2,1X,A1,1X,ES10.3,1X,A1,1X,I3,1X,A1,1X,I4,1X,A1,1X,ES10.3,1X,A2)
 

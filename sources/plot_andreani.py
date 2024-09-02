@@ -26,8 +26,13 @@ for i in range(noutliers):
     outliers[1,i] = df_data[1].values[df_outliers[0].values[i+1]-1]
     # print(outliers[1][i])
 
-plt.plot(df_data[0].values,df_data[1].values,"ko",ms=1)
+plt.plot(df_data[0].values,df_data[1].values,"ko",ms=2)
 plt.plot(t,models.andreani(t,*df_sol.values[0]),lw=1)
-plt.plot(outliers[0],outliers[1],'ro',mfc='none',ms=4,mew=0.5)
+plt.plot(outliers[0],outliers[1],'ro',mfc='none',ms=5,mew=0.5)
+plt.tick_params(axis='both',direction='in')
+plt.xticks(np.arange(-1,3.1,1))
+plt.yticks(np.arange(-6,12.1,6))
+plt.ylim(-6.5,12)
+plt.xlim(-1.1,3.6)
 plt.savefig(parent+"/images/andreani_fitting.pdf",bbox_inches = "tight")
 plt.show()

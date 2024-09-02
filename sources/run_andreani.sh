@@ -9,7 +9,7 @@ delta=1.0d-1
 sigmin=1.0d-1
 gamma=5.d0
 
-for noutliers in {0..12}
+for noutliers in {4..4}
   do
     echo $delta $sigmin $gamma $noutliers  > param.txt
     ./andreani >> salida.txt

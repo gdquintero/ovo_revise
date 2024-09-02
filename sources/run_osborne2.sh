@@ -27,7 +27,7 @@ delta=1.0d-3
 sigmin=1.0d-1
 gamma=5.d0
 
-for noutliers in {13..13}
+for noutliers in {0..15}
   do
     echo $delta $sigmin $gamma $noutliers  > param.txt
     ./osborne2 >> salida.txt
