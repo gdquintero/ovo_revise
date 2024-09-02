@@ -88,8 +88,8 @@
     read(100,*) delta,sigmin,gamma
     close(100)
 
-    inf = 5
-    sup = 5
+    inf = 0
+    sup = 10
 
     allocate(outliers(3*samples*(sup-inf+1)),stat=allocerr)
 

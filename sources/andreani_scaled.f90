@@ -29,15 +29,15 @@
     call get_environment_variable('PWD',pwd)
 
     ! Reading data and storing it in the variables t and y
-    Open(Unit = 100, File = trim(pwd)//"/../data/andreani100000.txt", ACCESS = "SEQUENTIAL")
+    Open(Unit = 100, File = trim(pwd)//"/../data/andreani1000.txt", ACCESS = "SEQUENTIAL")
 
     ! Set parameters
     read(100,*) samples
 
     n = 5
 
-    allocate(t(samples),y(samples),x(n),xk(n-1),xbest(n-1),xtrial(n-1),l(n),u(n),xinit(n-1),data(2,samples),faux(samples),indices(samples),Idelta(samples),nu_l(n-1),nu_u(n-1),&
-    opt_cond(n-1),stat=allocerr)
+    allocate(t(samples),y(samples),x(n),xk(n-1),xbest(n-1),xtrial(n-1),l(n),u(n),xinit(n-1),data(2,samples),faux(samples),&
+    indices(samples),Idelta(samples),nu_l(n-1),nu_u(n-1),opt_cond(n-1),stat=allocerr)
 
     if ( allocerr .ne. 0 ) then
         write(*,*) 'Allocation error in main program'
@@ -99,7 +99,7 @@
         
     outliers(:) = 0
 
-    Open(Unit = 100, file =trim(pwd)//"/../output/sol_ls_andreani100000.txt")
+    Open(Unit = 100, file =trim(pwd)//"/../output/sol_ls_andreani1000.txt")
 
     do i = 1,4
         read(100,*) xinit(i)

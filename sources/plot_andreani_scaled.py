@@ -36,11 +36,11 @@ def plot_log(n):
 
     fig,ax = plt.subplots(1, 1)
     if n == 100: 
-        file = "andreani_scaled_curve_100.txt"
+        file = "andreani_scaled_log_100.txt"
     elif n == 1000:
-        file = "andreani_scaled_curve_1000.txt"
+        file = "andreani_scaled_log_1000.txt"
     elif n == 10000:
-        file = "andreani_scaled_curve_10000.txt"
+        file = "andreani_scaled_log_10000.txt"
 
     df_data = pd.read_table(file,delimiter=" ",header=None,skipinitialspace=True)
     ax.tick_params(axis='both',direction='in',which='both')
