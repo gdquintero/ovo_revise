@@ -14,13 +14,13 @@ def gen_data(m):
 
     random.seed(123456)
 
-    outliers = 0
+    noutliers = 0
 
     for i in range(m):
         y[i] = y[i] + 0.5 * (2 * random.random() - 1)
 
         if random.random() <= 0.1:
-            outliers += 1
+            noutliers += 1
             y[i] = 5 + 7.5 * random.random()
 
 
@@ -29,23 +29,14 @@ def gen_data(m):
         for i in range(m):
             f.write("%f %f\n" % (t[i],y[i]))
 
-    print(outliers)
+    print(noutliers)
 
 
 xsol = np.array([0,2,-3,1])
 
-# gen_data(100)
-gen_data(1000)
+gen_data(100)
+# gen_data(1000)
 # gen_data(10000)
 # gen_data(100000)
 # gen_data(1000000)
 
-
-
-# with open(parent+"/data/andreani.txt","w") as f:
-#     f.write("%i\n" % m)
-#     for i in range(m):
-#         f.write("%f %f\n" % (t[i],y[i]))
-
-# plt.plot(t,y,"o")
-# plt.show()

@@ -126,7 +126,7 @@
         call cpu_time(finish)
         tiempo = finish - start
 
-        if (ntrials .gt. 1) then
+        if (ntrials .ge. 1) then
             write(*,*) "En la ejecucion ",itrial," el valor de fovo fue ",fovo
 
             if (fovo .lt. fovo_best) then

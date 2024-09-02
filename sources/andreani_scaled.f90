@@ -4,7 +4,7 @@
     implicit none 
     
     integer :: allocerr,samples,noutliers,q,iterations,n_eval,ntrials,itrial
-    real(kind=8) :: fxk,fxtrial,ti,sigma,seed,fovo_best,inf,sup
+    real(kind=8) :: fxk,fxtrial,ti,sigma,seed,fovo_best,inf,sup,time_best,tiempo
     real(kind=8), allocatable :: xtrial(:),faux(:),indices(:),nu_l(:),nu_u(:),opt_cond(:),&
                                  xinit(:),y(:),data(:,:),t(:),xbest(:)
     integer, allocatable :: Idelta(:),outliers(:),outliers_best(:)
@@ -29,15 +29,15 @@
     call get_environment_variable('PWD',pwd)
 
     ! Reading data and storing it in the variables t and y
-    Open(Unit = 100, File = trim(pwd)//"/../data/andreani1000.txt", ACCESS = "SEQUENTIAL")
+    Open(Unit = 100, File = trim(pwd)//"/../data/andreani100.txt", ACCESS = "SEQUENTIAL")
 
     ! Set parameters
     read(100,*) samples
 
     n = 5
 
-    allocate(t(samples),y(samples),x(n),xk(n-1),xbest(n-1),xtrial(n-1),l(n),u(n),xinit(n-1),data(2,samples),faux(samples),&
-    indices(samples),Idelta(samples),nu_l(n-1),nu_u(n-1),opt_cond(n-1),stat=allocerr)
+    allocate(t(samples),y(samples),x(n),xk(n-1),xbest(n-1),xtrial(n-1),l(n),u(n),xinit(n-1),data(2,samples),faux(samples),indices(samples),Idelta(samples),nu_l(n-1),nu_u(n-1),&
+    opt_cond(n-1),stat=allocerr)
 
     if ( allocerr .ne. 0 ) then
         write(*,*) 'Allocation error in main program'
@@ -101,7 +101,7 @@
         
     outliers(:) = 0
 
-    Open(Unit = 100, file =trim(pwd)//"/../output/sol_ls_andreani1000.txt")
+    Open(Unit = 100, file =trim(pwd)//"/../output/sol_ls_andreani100.txt")
 
     do i = 1,4
         read(100,*) xinit(i)
@@ -109,12 +109,10 @@
 
     close(100)
 
-    print*, xinit
-
     xk(:) = xinit(:)
 
     seed = 123456.0d0
-    ntrials = 1
+    ntrials = 100
     fovo_best = huge(1.0d0)
     inf = -5.0d0
     sup = 5.0d0
@@ -122,15 +120,17 @@
     do itrial = 1,ntrials
         xk(:) = xinit(:)
 
-        ! do i = 1, n-1
-        !     ! xk(i) = xk(i) + ((sup - inf) * drand(seed) + inf) * 1.0d-1 * max(1.0d0,abs(xk(i)))
-        !     xk(i) = xk(i) + (2.0d0 * drand(seed) - 1.0d0) * 5.0d-1 * max(1.0d0,abs(xk(i)))
-        ! enddo
+        do i = 1, n-1
+            xk(i) = xk(i) + (2.0d0 * drand(seed) - 1.0d0) * 5.0d-1 * max(1.0d0,abs(xk(i)))
+        enddo
 
+        call cpu_time(start)
         call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial,&
         delta,sigmin,gamma,outliers,.true.,fovo,iterations,n_eval)
+        call cpu_time(finish)
+        tiempo = finish - start
 
-        if (ntrials .gt. 1) then
+        if (ntrials .ge. 1) then
             write(*,*) "En la ejecucion ",itrial," el valor de fovo fue ",fovo
 
             if (fovo .lt. fovo_best) then
@@ -145,15 +145,16 @@
 
     call cpu_time(finish)
 
-    write(*,100) "esta", noutliers,"&",fovo,"&",iterations,"&",n_eval,"&",finish-start,"\\"
-    100 format (A5,1X,I7,1X,A1,1X,ES10.3,1X,A1,1X,I3,1X,A1,1X,I4,1X,A1,1X,ES10.3,1X,A2)
-
-    ! print*, "El valor de la fovo_best es", fovo_best
-    ! print*, "Solucion", xk
-
     xk = xbest
     outliers = outliers_best
     fovo = fovo_best
+    tiempo = time_best
+
+    write(*,100) "esta", noutliers,"&",fovo,"&",iterations,"&",n_eval,"&",finish-start,"\\"
+    100 format (A5,1X,I7,1X,A1,1X,ES10.3,1X,A1,1X,I3,1X,A1,1X,I4,1X,A1,1X,ES10.3,1X,A2)
+
+    write(*,101) "plot",noutliers,fovo
+    101 format (A5,1X,I7,1X,ES13.6)
 
     Open(Unit = 98, File = trim(pwd)//"/../output/solution_andreani_scaled.txt", ACCESS = "SEQUENTIAL")
     write(98,"(11F7.3)") xk(1),xk(2),xk(3),xk(4)
