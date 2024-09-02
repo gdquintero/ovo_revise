@@ -13,7 +13,7 @@ plt.rcParams['figure.figsize'] = [size_img * 6.4,size_img * 4.8]
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
 
-df_data = pd.read_table(parent+"/data/andreani_scaled.txt",delimiter=" ",header=None,skiprows=1,skipinitialspace=True)
+df_data = pd.read_table(parent+"/data/andreani1000.txt",delimiter=" ",header=None,skiprows=1,skipinitialspace=True)
 df_sol = pd.read_table(parent+"/output/solution_andreani_scaled.txt",delimiter=" ",header=None,skiprows=0,skipinitialspace=True)
 df_outliers = pd.read_table(parent+"/output/outliers_andreani_scaled.txt",delimiter=" ",header=None,skiprows=0,skipinitialspace=True)
 

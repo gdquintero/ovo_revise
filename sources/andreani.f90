@@ -117,7 +117,6 @@
         xk(:) = xinit(:)
 
         do i = 1, n-1
-            ! xk(i) = xk(i) + ((sup - inf) * drand(seed) + inf) * 1.0d-1 * max(1.0d0,abs(xk(i)))
             xk(i) = xk(i) + (2.0d0 * drand(seed) - 1.0d0) * 5.0d-1 * max(1.0d0,abs(xk(i)))
         enddo
 
