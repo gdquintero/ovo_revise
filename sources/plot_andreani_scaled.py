@@ -44,21 +44,23 @@ def plot_log(n):
 
     df_data = pd.read_table(file,delimiter=" ",header=None,skipinitialspace=True)
     ax.tick_params(axis='both',direction='in',which='both')
-    ax.loglog(df_data[1].values,df_data[2].values,"-",color="darkgreen",lw=1)
+    ax.loglog(df_data[1].values,df_data[2].values,"-o",color="darkgreen",lw=0.5,ms=1)
     ax.set_xscale('linear')
 
     if n == 100:
-        plt.xticks(np.arange(0,16.1,5))
+        plt.xticks(np.arange(5,15.1,1))
     elif n == 1000:
-        plt.xticks(np.arange(0,150.1,50))
+        plt.xticks(np.arange(50,150.1,10))
     elif n == 10000:
-        plt.xticks(np.arange(0,1500.1,500))
+        plt.xticks(np.arange(750,1250.1,100))
 
     # ax.set_ylim(min(np.log10(y)),max(np.log10(y))+10)
     plt.xlabel("Number of outliers $o$")
     plt.ylabel("$f(x^*)$ (log scale)")
-    plt.savefig(parent+"/images/log10.pdf",bbox_inches="tight")
+    plt.savefig(parent+"/images/log"+str(n)+".pdf",bbox_inches="tight")
+    # plt.show()
 
-plot_log(100)
-# plot_log(1000)
-# plot_log(10000)
+
+n = 10000
+
+plot_log(n)

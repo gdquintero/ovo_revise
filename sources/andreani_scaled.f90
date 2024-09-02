@@ -4,11 +4,11 @@
     implicit none 
     
     integer :: allocerr,samples,noutliers,q,iterations,n_eval,ntrials,itrial
-    real(kind=8) :: fxk,fxtrial,ti,sigma,seed,fovo_best,inf,sup,time_best,tiempo
+    real(kind=8) :: fxk,fxtrial,ti,sigma,seed,fovo_best,inf,sup,time_best,tiempo,fovo,delta,&
+    sigmin,gamma,start,finish
     real(kind=8), allocatable :: xtrial(:),faux(:),indices(:),nu_l(:),nu_u(:),opt_cond(:),&
                                  xinit(:),y(:),data(:,:),t(:),xbest(:)
     integer, allocatable :: Idelta(:),outliers(:),outliers_best(:)
-    real(kind=8) :: fovo,delta,sigmin,gamma,start,finish
     
     ! LOCAL SCALARS
     logical :: checkder
@@ -29,7 +29,7 @@
     call get_environment_variable('PWD',pwd)
 
     ! Reading data and storing it in the variables t and y
-    Open(Unit = 100, File = trim(pwd)//"/../data/andreani100.txt", ACCESS = "SEQUENTIAL")
+    Open(Unit = 100, File = trim(pwd)//"/../data/andreani100000.txt", ACCESS = "SEQUENTIAL")
 
     ! Set parameters
     read(100,*) samples
@@ -96,12 +96,10 @@
         write(*,*) 'Allocation error in main program'
         stop
     end if
-
-    call cpu_time(start)
         
     outliers(:) = 0
 
-    Open(Unit = 100, file =trim(pwd)//"/../output/sol_ls_andreani100.txt")
+    Open(Unit = 100, file =trim(pwd)//"/../output/sol_ls_andreani100000.txt")
 
     do i = 1,4
         read(100,*) xinit(i)
@@ -185,7 +183,7 @@
         real(kind=8),   intent(inout) :: indices(samples),xtrial(n-1),fovo
         integer,        intent(inout) :: outliers(noutliers),iterations,n_eval
 
-        integer, parameter  :: max_iter = 10000, max_iter_sub = 100, kflag = 2
+        integer, parameter  :: max_iter = 1000, max_iter_sub = 100, kflag = 2
         integer             :: iter,iter_sub,i,j
         real(kind=8)        :: gaux,terminate,alpha,epsilon
 
