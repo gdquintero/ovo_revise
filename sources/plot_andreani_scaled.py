@@ -39,6 +39,8 @@ def plot_log(n):
         file = "andreani_scaled_curve_100.txt"
     elif n == 1000:
         file = "andreani_scaled_curve_1000.txt"
+    elif n == 10000:
+        file = "andreani_scaled_curve_10000.txt"
 
     df_data = pd.read_table(file,delimiter=" ",header=None,skipinitialspace=True)
     ax.tick_params(axis='both',direction='in',which='both')
@@ -49,6 +51,8 @@ def plot_log(n):
         plt.xticks(np.arange(0,16.1,5))
     elif n == 1000:
         plt.xticks(np.arange(0,150.1,50))
+    elif n == 10000:
+        plt.xticks(np.arange(0,1500.1,500))
 
     # ax.set_ylim(min(np.log10(y)),max(np.log10(y))+10)
     plt.xlabel("Number of outliers $o$")
@@ -57,3 +61,4 @@ def plot_log(n):
 
 plot_log(100)
 # plot_log(1000)
+# plot_log(10000)
