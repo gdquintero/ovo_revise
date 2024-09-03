@@ -41,6 +41,10 @@ def plot_log(n):
         file = "andreani_scaled_log_1000.txt"
     elif n == 10000:
         file = "andreani_scaled_log_10000.txt"
+    elif n == 100000:
+        file = "andreani_scaled_log_100000.txt"
+    else:
+        file = "andreani_scaled_log_1000000.txt"
 
     df_data = pd.read_table(file,delimiter=" ",header=None,skipinitialspace=True)
     ax.tick_params(axis='both',direction='in',which='both')
@@ -48,11 +52,15 @@ def plot_log(n):
     ax.set_xscale('linear')
 
     if n == 100:
-        plt.xticks(np.arange(5,15.1,1))
+        plt.xticks(np.arange(5,15.1,2))
     elif n == 1000:
-        plt.xticks(np.arange(50,150.1,10))
+        plt.xticks(np.arange(50,150.1,20))
     elif n == 10000:
         plt.xticks(np.arange(750,1250.1,100))
+    elif n == 100000:
+        plt.xticks(np.arange(5000,15000.1,2000))
+    else:
+        plt.xticks(np.arange(50000,150000.1,20000))
 
     # ax.set_ylim(min(np.log10(y)),max(np.log10(y))+10)
     plt.xlabel("Number of outliers $o$")
@@ -61,6 +69,6 @@ def plot_log(n):
     # plt.show()
 
 
-n = 10000
+n = 1000000
 
 plot_log(n)
