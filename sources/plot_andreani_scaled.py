@@ -13,24 +13,41 @@ plt.rcParams['figure.figsize'] = [size_img * 6.4,size_img * 4.8]
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
 
-# df_data = pd.read_table(parent+"/data/andreani100.txt",delimiter=" ",header=None,skiprows=1,skipinitialspace=True)
-# df_sol = pd.read_table(parent+"/output/solution_andreani_scaled.txt",delimiter=" ",header=None,skiprows=0,skipinitialspace=True)
-# df_outliers = pd.read_table(parent+"/output/outliers_andreani_scaled.txt",delimiter=" ",header=None,skiprows=0,skipinitialspace=True)
+def plot_fit(n):
+    if n == 100: 
+        file = parent+"/data/andreani100.txt"
+    elif n == 1000:
+        file = parent+"/data/andreani1000.txt"
+    elif n == 10000:
+        file = parent+"/data/andreani10000.txt"
+    elif n == 100000:
+        file = parent+"/data/andreani100000.txt"
+    else:
+        file = parent+"/data/andreani1000000.txt"
 
-# t = np.linspace(df_data[0].values[0],df_data[0].values[-1],1000)
-# noutliers = df_outliers[0].values[0]
-# outliers = np.empty((2,noutliers))
+    df_data = pd.read_table(file,delimiter=" ",header=None,skiprows=1,skipinitialspace=True)
+    df_sol = pd.read_table(parent+"/output/solution_andreani_scaled.txt",delimiter=" ",header=None,skiprows=0,skipinitialspace=True)
+    df_outliers = pd.read_table(parent+"/output/outliers_andreani_scaled.txt",delimiter=" ",header=None,skiprows=0,skipinitialspace=True)
 
-# for i in range(noutliers):
-#     outliers[0,i] = df_data[0].values[df_outliers[0].values[i+1]-1]
-#     outliers[1,i] = df_data[1].values[df_outliers[0].values[i+1]-1]
-#     # print(outliers[1][i])
+    t = np.linspace(df_data[0].values[0],df_data[0].values[-1],1000)
+    noutliers = df_outliers[0].values[0]
+    outliers = np.empty((2,noutliers))
 
-# plt.plot(df_data[0].values,df_data[1].values,"ko",ms=1)
-# plt.plot(t,models.andreani(t,*df_sol.values[0]),lw=1)
-# plt.plot(outliers[0],outliers[1],'ro',mfc='none',ms=4,mew=0.5)
-# plt.savefig(parent+"/images/andreani_fitting.pdf",bbox_inches = "tight")
-# plt.show()
+    for i in range(noutliers):
+        outliers[0,i] = df_data[0].values[df_outliers[0].values[i+1]-1]
+        outliers[1,i] = df_data[1].values[df_outliers[0].values[i+1]-1]
+        # print(outliers[1][i])
+
+    plt.plot(df_data[0].values,df_data[1].values,"ko",ms=0.5)
+    plt.plot(t,models.andreani(t,*df_sol.values[0]),lw=1)
+    plt.plot(outliers[0],outliers[1],'ro',mfc='none',ms=3,mew=0.5)
+    plt.tick_params(axis='both',direction='in')
+    plt.xticks(np.arange(-1,3.1,1))
+    plt.yticks(np.arange(-6,12.1,6))
+    plt.ylim(-6.5,12)
+    plt.xlim(-1.1,3.6)
+    plt.savefig(parent+"/images/andreani_fitting"+str(n)+".pdf",bbox_inches = "tight")
+    plt.close()
 
 def plot_log(n):
 
@@ -62,13 +79,14 @@ def plot_log(n):
     else:
         plt.xticks(np.arange(50000,150000.1,20000))
 
-    # ax.set_ylim(min(np.log10(y)),max(np.log10(y))+10)
     plt.xlabel("Number of outliers $o$")
     plt.ylabel("$f(x^*)$ (log scale)")
     plt.savefig(parent+"/images/log"+str(n)+".pdf",bbox_inches="tight")
     # plt.show()
+    plt.close()
 
 
-n = 1000000
+n = 100
 
-plot_log(n)
+# plot_log(n)
+plot_fit(n)
