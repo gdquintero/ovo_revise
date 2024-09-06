@@ -74,11 +74,11 @@ def main(problem):
         print(popt)
 
     else:
-        df = pd.read_table(parent+"/data/andreani1000000.txt",delimiter=" ",header=None,skiprows=1)
+        df = pd.read_table(parent+"/data/andreani1000.txt",delimiter=" ",header=None,skiprows=1)
         init = np.array([-1.0,-2.0,1.0,-1.0])
         popt, pcov = curve_fit(models.andreani,df[0].values,df[1].values,p0=init)
         
-        with open(parent+"/output/sol_ls_andreani_scaled.txt","w") as f:
+        with open(parent+"/output/sol_ls_andreani1000.txt","w") as f:
             for i in range(4):
                 f.write("%f\n" % popt[i])
 
