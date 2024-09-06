@@ -15,13 +15,11 @@ plt.rc('font', family='serif')
 
 def plot_fit(n):
 
-    file_data = parent+"/data/andreani"+str(n)+".txt"
-    file_sol = parent+"/output/solution_andreani_scaled"+str(n)+".txt"
-    file_out = parent+"/output/outliers_andreani_scaled"+str(n)+".txt"
+    file = parent+"/data/andreani"+str(n)+".txt"
 
-    df_data = pd.read_table(file_data,delimiter=" ",header=None,skiprows=1,skipinitialspace=True)
-    df_sol = pd.read_table(file_sol,delimiter=" ",header=None,skiprows=0,skipinitialspace=True)
-    df_outliers = pd.read_table(file_out,delimiter=" ",header=None,skiprows=0,skipinitialspace=True)
+    df_data = pd.read_table(file,delimiter=" ",header=None,skiprows=1,skipinitialspace=True)
+    df_sol = pd.read_table(parent+"/output/solution_andreani_scaled.txt",delimiter=" ",header=None,skiprows=0,skipinitialspace=True)
+    df_outliers = pd.read_table(parent+"/output/outliers_andreani_scaled.txt",delimiter=" ",header=None,skiprows=0,skipinitialspace=True)
 
     t = np.linspace(df_data[0].values[0],df_data[0].values[-1],1000)
     noutliers = df_outliers[0].values[0]
@@ -32,8 +30,8 @@ def plot_fit(n):
         outliers[1,i] = df_data[1].values[df_outliers[0].values[i+1]-1]
         # print(outliers[1][i])
 
-    plt.plot(df_data[0].values,df_data[1].values,"ko",ms=0.1)
-    plt.plot(outliers[0],outliers[1],'ro',mfc='none',ms=1,mew=0.1)
+    plt.plot(df_data[0].values,df_data[1].values,"ko",ms=0.2)
+    plt.plot(outliers[0],outliers[1],'ro',mfc='none',ms=2,mew=0.1)
     plt.plot(t,models.andreani(t,*df_sol.values[0]),lw=1)
     plt.tick_params(axis='both',direction='in')
     plt.xticks(np.arange(-1,3.1,1))
@@ -97,8 +95,7 @@ def plot_log(n):
     plt.close()
 
 
-for n in [100,1000,10000,100000,1000000]:
-    plot_log(n)
+# for n in [100,1000,10000,100000,1000000]:
+#     plot_log(n)
 
-# plot_fit(1000000)
-# plot_log(1000000)
+plot_fit(10000)

@@ -8,30 +8,27 @@ cwd = os.getcwd()
 parent =  os.path.abspath(os.path.join(cwd,os.pardir))
 
 def gen_data(m):
-    t = np.linspace(-100,100,m)
+    t = np.linspace(-1,3.5,m)
     y = models.andreani(t,*xsol)
 
     random.seed(123456)
-    np.random.seed(123456)
-
 
     noutliers = 0
+    r = 0.5
 
     for i in range(m):
-        y[i] = y[i] + 0.5 * (2 * random.random() - 1)
+        y[i] = y[i] + random.uniform(-r,r)
 
         if random.random() <= 0.1:
             noutliers += 1
-            # y[i] = 5 + 7.5 * random.random()
-
 
             operacion = np.random.choice([0,1],p=[0.3, 0.7])
-            r = np.random.uniform(5, 10)
+            r2 = 5 + 10 * random.random()
 
             if operacion == 1:
-                y[i] += r
+                y[i] = r2
             else:
-                y[i] -= r
+                y[i] = -r2
 
 
     with open(parent+"/data/andreani"+str(m)+".txt","w") as f:
@@ -39,18 +36,21 @@ def gen_data(m):
         for i in range(m):
             f.write("%f %f\n" % (t[i],y[i]))
 
-    print(noutliers)
+    # print(noutliers)
     plt.plot(t,y,"o",color="darkgreen",ms=2)
     plt.show()
 
 
-xsol = np.array([2.5,1250/10000,0,-15/2000000])
+xsol = np.array([0,2,-3,1])
+
+for n in [100,1000,10000,100000,1000000]:
+    gen_data(n)
 
 # gen_data(100)
 # gen_data(1000)
 # gen_data(10000)
 # gen_data(100000)
-gen_data(1000000)
+# gen_data(1000000)
 
 
 

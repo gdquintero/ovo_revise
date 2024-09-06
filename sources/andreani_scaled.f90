@@ -29,7 +29,7 @@
     call get_environment_variable('PWD',pwd)
 
     ! Reading data and storing it in the variables t and y
-    Open(Unit = 100, File = trim(pwd)//"/../data/andreani1000000.txt", ACCESS = "SEQUENTIAL")
+    Open(Unit = 100, File = trim(pwd)//"/../data/andreani10000.txt", ACCESS = "SEQUENTIAL")
 
     ! Set parameters
     read(100,*) samples
@@ -99,7 +99,7 @@
         
     outliers(:) = 0
 
-    Open(Unit = 100, file =trim(pwd)//"/../output/sol_ls_andreani1000000.txt")
+    Open(Unit = 100, file =trim(pwd)//"/../output/sol_ls_andreani10000.txt")
 
     do i = 1,4
         read(100,*) xinit(i)
@@ -154,10 +154,10 @@
     write(*,101) "plot",noutliers,fovo
     101 format (A5,1X,I7,1X,ES13.6)
 
-    Open(Unit = 98, File = trim(pwd)//"/../output/solution_andreani_scaled1000000.txt", ACCESS = "SEQUENTIAL")
+    Open(Unit = 98, File = trim(pwd)//"/../output/solution_andreani_scaled.txt", ACCESS = "SEQUENTIAL")
     write(98,"(11F7.3)") xk(1),xk(2),xk(3),xk(4)
 
-    Open(Unit = 99, File = trim(pwd)//"/../output/outliers_andreani_scaled1000000.txt", ACCESS = "SEQUENTIAL")
+    Open(Unit = 99, File = trim(pwd)//"/../output/outliers_andreani_scaled.txt", ACCESS = "SEQUENTIAL")
     write(99,"(I7)") noutliers
 
     do i = 1, noutliers
