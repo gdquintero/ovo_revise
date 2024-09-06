@@ -14,9 +14,10 @@ def gen_data(m):
     random.seed(123456)
 
     noutliers = 0
+    r = 1
 
     for i in range(m):
-        y[i] = y[i] + 0.5 * (2 * random.random() - 1)
+        y[i] = y[i] + random.uniform(-r,r)
 
         if random.random() <= 0.1:
             noutliers += 1
@@ -35,9 +36,9 @@ def gen_data(m):
 
 xsol = np.array([0,2,-3,1])
 
-# gen_data(100)
+gen_data(100)
 # gen_data(1000)
 # gen_data(10000)
-gen_data(100000)
+# gen_data(100000)
 # gen_data(1000000)
 
