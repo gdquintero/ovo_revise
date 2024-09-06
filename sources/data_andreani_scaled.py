@@ -29,7 +29,7 @@ def gen_data(m):
         for i in range(m):
             f.write("%f %f\n" % (t[i],y[i]))
 
-    print(noutliers)
+    # print(noutliers)
     plt.plot(t,y,"o",color="darkgreen",ms=2)
     plt.show()
 
@@ -37,8 +37,8 @@ def gen_data(m):
 xsol = np.array([0,2,-3,1])
 
 gen_data(100)
-# gen_data(1000)
-# gen_data(10000)
-# gen_data(100000)
-# gen_data(1000000)
+gen_data(1000)
+gen_data(10000)
+gen_data(100000)
+gen_data(1000000)
 

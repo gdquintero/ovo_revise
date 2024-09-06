@@ -74,7 +74,7 @@ def main(problem):
         print(popt)
 
     else:
-        df = pd.read_table(parent+"/data/andreani100.txt",delimiter=" ",header=None,skiprows=1)
+        df = pd.read_table(parent+"/data/andreani1000000.txt",delimiter=" ",header=None,skiprows=1)
         init = np.array([-1.0,-2.0,1.0,-1.0])
         popt, pcov = curve_fit(models.andreani,df[0].values,df[1].values,p0=init)
         
