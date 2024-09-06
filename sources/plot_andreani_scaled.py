@@ -14,20 +14,14 @@ plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
 
 def plot_fit(n):
-    if n == 100: 
-        file = parent+"/data/andreani100.txt"
-    elif n == 1000:
-        file = parent+"/data/andreani1000.txt"
-    elif n == 10000:
-        file = parent+"/data/andreani10000.txt"
-    elif n == 100000:
-        file = parent+"/data/andreani100000.txt"
-    else:
-        file = parent+"/data/andreani1000000.txt"
 
-    df_data = pd.read_table(file,delimiter=" ",header=None,skiprows=1,skipinitialspace=True)
-    df_sol = pd.read_table(parent+"/output/solution_andreani_scaled.txt",delimiter=" ",header=None,skiprows=0,skipinitialspace=True)
-    df_outliers = pd.read_table(parent+"/output/outliers_andreani_scaled.txt",delimiter=" ",header=None,skiprows=0,skipinitialspace=True)
+    file_data = parent+"/data/andreani"+str(n)+".txt"
+    file_sol = parent+"/output/solution_andreani_scaled"+str(n)+".txt"
+    file_out = parent+"/output/outliers_andreani_scaled"+str(n)+".txt"
+
+    df_data = pd.read_table(file_data,delimiter=" ",header=None,skiprows=1,skipinitialspace=True)
+    df_sol = pd.read_table(file_sol,delimiter=" ",header=None,skiprows=0,skipinitialspace=True)
+    df_outliers = pd.read_table(file_out,delimiter=" ",header=None,skiprows=0,skipinitialspace=True)
 
     t = np.linspace(df_data[0].values[0],df_data[0].values[-1],1000)
     noutliers = df_outliers[0].values[0]
@@ -71,8 +65,6 @@ def plot_log(n):
     plt.plot(df_data[1].values,df_data[2].values,"-o",color="darkgreen",lw=0.5,ms=1)
 
 
-
-
     if n == 100:
         plt.xticks(np.arange(5,15.1,2))
         plt.yticks(np.arange(0,5.1,1))
@@ -105,8 +97,8 @@ def plot_log(n):
     plt.close()
 
 
-# for n in [100,1000,10000,100000,1000000]:
-#     plot_log(n)
+for n in [100,1000,10000,100000,1000000]:
+    plot_log(n)
 
-plot_fit(1000000)
+# plot_fit(1000000)
 # plot_log(1000000)
