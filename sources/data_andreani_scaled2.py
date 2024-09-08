@@ -18,7 +18,7 @@ def gen_data(m):
     for i in range(m):
         y[i] = y[i] + random.uniform(-r,r)
 
-        if random.random() <= 0.2:
+        if random.random() <= 0.1:
             noutliers += 1
 
             operacion = np.random.choice([0,1],p=[0.2, 0.8])
@@ -37,7 +37,7 @@ def gen_data(m):
 
     # print(noutliers)
     plt.plot(t,y,"o",color="darkgreen",ms=2)
-    plt.show()
+    # plt.show()
 
 
 xsol = np.array([0,2,-3,1])
@@ -45,11 +45,11 @@ xsol = np.array([0,2,-3,1])
 # for n in [100,1000,10000,100000,1000000]:
 #     gen_data(n)
 
-# gen_data(100)
-# gen_data(1000)
-# gen_data(10000)
-# gen_data(100000)
-# gen_data(1000000)
+gen_data(100)
+gen_data(1000)
+gen_data(10000)
+gen_data(100000)
+gen_data(1000000)
 
 
 
