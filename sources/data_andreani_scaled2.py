@@ -22,7 +22,7 @@ def gen_data(m):
             noutliers += 1
 
             operacion = np.random.choice([0,1],p=[0.2, 0.8])
-            r2 = 12 + 2 * random.random()
+            r2 = 10 + 5 * random.random()
 
             if operacion == 1:
                 y[i] = r2
@@ -47,7 +47,7 @@ xsol = np.array([0,2,-3,1])
 
 # gen_data(100)
 # gen_data(1000)
-gen_data(10000)
+# gen_data(10000)
 # gen_data(100000)
 # gen_data(1000000)
 
