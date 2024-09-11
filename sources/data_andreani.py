@@ -19,6 +19,8 @@ y = np.array([
     0.031,0.328,1.097,1.144,1.675,2.296,3.413,4.232,5.159,6.2,6.961,8.648,9.667,11.224,12.925
 ])
 
+print(len(y))
+
 with open(parent+"/data/andreani.txt","w") as f:
     f.write("%i\n" % m)
     for i in range(m):
