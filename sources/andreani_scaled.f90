@@ -29,7 +29,7 @@
     call get_environment_variable('PWD',pwd)
 
     ! Reading data and storing it in the variables t and y
-    Open(Unit = 100, File = trim(pwd)//"/../data/andreani100.txt", ACCESS = "SEQUENTIAL")
+    Open(Unit = 100, File = trim(pwd)//"/../data/andreani1000000.txt", ACCESS = "SEQUENTIAL")
 
     ! Set parameters
     read(100,*) samples
@@ -99,7 +99,7 @@
         
     outliers(:) = 0
 
-    Open(Unit = 100, file =trim(pwd)//"/../output/sol_ls_andreani100.txt")
+    Open(Unit = 100, file =trim(pwd)//"/../output/sol_ls_andreani1000000.txt")
 
     do i = 1,4
         read(100,*) xinit(i)
@@ -109,8 +109,10 @@
 
     xk(:) = xinit(:)
 
+    xk(:) = 0.0d0
+
     seed = 123456.0d0
-    ntrials = 100
+    ntrials = 1
     fovo_best = huge(1.0d0)
     inf = -5.0d0
     sup = 5.0d0
@@ -118,9 +120,9 @@
     do itrial = 1,ntrials
         xk(:) = xinit(:)
 
-        do i = 1, n-1
-            xk(i) = xk(i) + (2.0d0 * drand(seed) - 1.0d0) * 5.0d-1 * max(1.0d0,abs(xk(i)))
-        enddo
+        ! do i = 1, n-1
+        !     xk(i) = xk(i) + (2.0d0 * drand(seed) - 1.0d0) * 5.0d-1 * max(1.0d0,abs(xk(i)))
+        ! enddo
 
         call cpu_time(start)
         call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial,&
@@ -183,7 +185,7 @@
         real(kind=8),   intent(inout) :: indices(samples),xtrial(n-1),fovo
         integer,        intent(inout) :: outliers(noutliers),iterations,n_eval
 
-        integer, parameter  :: max_iter = 10000, max_iter_sub = 100, kflag = 2
+        integer, parameter  :: max_iter = 1000, max_iter_sub = 100, kflag = 2
         integer             :: iter,iter_sub,i,j
         real(kind=8)        :: gaux,terminate,alpha,epsilon
 
