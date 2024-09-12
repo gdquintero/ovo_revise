@@ -4,8 +4,8 @@
     implicit none 
     
     integer :: allocerr,samples,noutliers,q,iterations,n_eval,ntrials,itrial
-    real(kind=8) :: fxk,fxtrial,ti,sigma,seed,fovo_best,inf,sup,time_best,tiempo,fovo,delta,&
-    sigmin,gamma,start,finish
+    real(kind=8) :: fxk,fxtrial,ti,sigma,seed,fovo_best,inf,sup,part_time,fovo,delta,&
+    sigmin,gamma,start,finish,init_time,end_time,total_time
     real(kind=8), allocatable :: xtrial(:),faux(:),indices(:),nu_l(:),nu_u(:),opt_cond(:),&
                                  xinit(:),y(:),data(:,:),t(:),xbest(:)
     integer, allocatable :: Idelta(:),outliers(:),outliers_best(:)
@@ -29,7 +29,7 @@
     call get_environment_variable('PWD',pwd)
 
     ! Reading data and storing it in the variables t and y
-    Open(Unit = 100, File = trim(pwd)//"/../data/andreani100000.txt", ACCESS = "SEQUENTIAL")
+    Open(Unit = 100, File = trim(pwd)//"/../data/andreani100.txt", ACCESS = "SEQUENTIAL")
 
     ! Set parameters
     read(100,*) samples
@@ -99,7 +99,7 @@
         
     outliers(:) = 0
 
-    Open(Unit = 100, file =trim(pwd)//"/../output/sol_ls_andreani100000.txt")
+    Open(Unit = 100, file =trim(pwd)//"/../output/sol_ls_andreani100.txt")
 
     do i = 1,4
         read(100,*) xinit(i)
@@ -115,6 +115,8 @@
     inf = -5.0d0
     sup = 5.0d0
 
+    call cpu_time(init_time)
+
     do itrial = 1,ntrials
         xk(:) = xinit(:)
 
@@ -126,7 +128,7 @@
         call ovo_algorithm(q,noutliers,t,y,indices,Idelta,samples,m,n,xtrial,&
         delta,sigmin,gamma,outliers,.true.,fovo,iterations,n_eval)
         call cpu_time(finish)
-        tiempo = finish - start
+        part_time = finish - start
 
         if (ntrials .ge. 1) then
             write(*,*) "En la ejecucion ",itrial," el valor de fovo fue ",fovo
@@ -141,15 +143,18 @@
 
     enddo
 
-    call cpu_time(finish)
+    call cpu_time(end_time)
+
+    total_time = end_time - init_time
 
     xk = xbest
     outliers = outliers_best
     fovo = fovo_best
-    tiempo = time_best
 
-    write(*,100) "esta", noutliers,"&",fovo,"&",iterations,"&",n_eval,"&",finish-start,"\\"
-    100 format (A5,1X,I7,1X,A1,1X,ES10.3,1X,A1,1X,I3,1X,A1,1X,I4,1X,A1,1X,ES10.3,1X,A2)
+    write(*,100) "esta", noutliers,"&",fovo,"&",iterations,"&",n_eval,"&",part_time,"&",&
+    part_time/iterations,"&",part_time/n_eval,"&",total_time,"\\"
+    100 format (A5,1X,I7,1X,A1,1X,ES10.3,1X,A1,1X,I3,1X,A1,1X,I4,1X,A1,1X,ES10.3,1X,A1,1X,&
+    ES10.3,1X,A1,1X,ES10.3,1X,A1,1X,ES10.3,1X,A2)
 
     write(*,101) "plot",noutliers,fovo
     101 format (A5,1X,I7,1X,ES13.6)
