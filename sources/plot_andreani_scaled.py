@@ -65,20 +65,20 @@ def plot_log(n):
 
     if n == 100:
         plt.xticks(np.arange(5,15.1,2))
-        plt.yticks(np.arange(0,5.1,1))
-        plt.ylim(-0.5,5)
+        plt.yticks(np.arange(0,2.8,0.5))
+        plt.ylim(-0.2,2.8)
     elif n == 1000:
         plt.xticks(np.arange(50,150.1,20))
-        plt.yticks(np.arange(0,10.1,2))
-        plt.ylim(-0.5,10)
+        plt.yticks(np.arange(0,6.8,1))
+        plt.ylim(-0.5,6.8)
     elif n == 10000:
         plt.xticks(np.arange(750,1250.1,100))
-        plt.yticks(np.arange(0,6.1,1))
-        plt.ylim(-0.5,6)
+        plt.yticks(np.arange(0,2.1,0.5))
+        plt.ylim(-0.2,2.1)
     elif n == 100000:
         plt.xticks(np.arange(5000,15000.1,2000))
-        plt.yticks(np.arange(0,12.1,2))
-        plt.ylim(-0.5,12)
+        plt.yticks(np.arange(0,11.1,2))
+        plt.ylim(-0.5,11)
     else:
         plt.xticks(np.arange(50000,150000.1,20000))
         plt.yticks(np.arange(0,18.1,3))
@@ -98,7 +98,7 @@ def plot_log(n):
 for n in [100,1000,10000,100000]:
     plot_log(n)
 
-plot_fit(100)
+# plot_fit(100)
 # plot_fit(1000)
 # plot_fit(10000)
 # plot_fit(100000)

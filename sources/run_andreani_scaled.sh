@@ -9,7 +9,7 @@ delta=1.0d-1
 sigmin=1.0d-1
 gamma=5.d0
 
-for ((noutliers=6; noutliers<=6; noutliers+=1))
+for ((noutliers=980; noutliers<=980; noutliers+=1))
   do
     echo $delta $sigmin $gamma $noutliers  > param.txt
     ./andreani_scaled >> salida.txt
