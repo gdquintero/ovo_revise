@@ -95,7 +95,12 @@ def plot_log(n):
     plt.close()
 
 
-# for n in [100,1000,10000,100000,1000000]:
-#     plot_log(n)
+for n in [100,1000,10000,100000,1000000]:
+    plot_log(n)
+    plot_fit(n)
 
-plot_fit(10000)
+plot_fit(100)
+# plot_fit(1000)
+# plot_fit(10000)
+# plot_fit(100000)
+# plot_fit(1000000)
