@@ -18,7 +18,7 @@ def gen_data(m):
     for i in range(m):
         y[i] = y[i] + random.uniform(-r,r)
 
-        if random.random() <= 0.2:
+        if random.random() <= 0.1:
             noutliers += 1
 
             operacion = np.random.choice([0,1],p=[0.2, 0.8])
@@ -35,7 +35,7 @@ def gen_data(m):
         for i in range(m):
             f.write("%f %f\n" % (t[i],y[i]))
 
-    # print(noutliers)
+    print(noutliers)
     plt.plot(t,y,"o",ms=2)
     plt.savefig(parent+"/data/andreani_scaled_data"+str(m)+".pdf",bbox_inches="tight")
     # plt.show()
