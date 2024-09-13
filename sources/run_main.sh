@@ -11,7 +11,7 @@ gfortran -O3 -w -fcheck=all -g main.f90 -L$ALGENCAN/lib -lalgencan -lhsl sort.o 
 
 delta=1.0d-3
 sigmin=1.0d-1
-gamma=5.0d0
+gamma=5.d0
 
 echo $delta $sigmin $gamma $noutliers  > param.txt
 ./main >> salida.txt

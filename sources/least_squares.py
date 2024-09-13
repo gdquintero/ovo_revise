@@ -13,9 +13,13 @@ def main(problem):
     if problem == 1:
         df = pd.read_table(parent+"/data/seropositives.txt",delimiter=" ",header=None,skiprows=1)
 
-        init_measles = np.array([0.197,0.287,0.021])
-        init_mumps = np.array([0.156,0.250,0.0])
-        init_rubella = np.array([0.0628,0.178,0.020])
+        # init_measles = np.array([0.197,0.287,0.021])
+        # init_mumps = np.array([0.156,0.250,0.0])
+        # init_rubella = np.array([0.0628,0.178,0.020])
+
+        init_measles = np.ones(3)
+        init_mumps   = np.ones(3)
+        init_rubella = np.ones(3)
 
         popt_measles, pcov_measles  = curve_fit(models.F,df[0].values,df[1].values,p0=init_measles,bounds=(np.zeros(3),np.ones(3)))
         popt_mumps, pcov_mumps      = curve_fit(models.F,df[0].values,df[2].values,p0=init_mumps,bounds=(np.zeros(3),np.ones(3)))
@@ -26,19 +30,29 @@ def main(problem):
             f.write("%f %f %f\n" % (popt_mumps[0],popt_mumps[1],popt_mumps[2]))
             f.write("%f %f %f\n" % (popt_rubella[0],popt_rubella[1],popt_rubella[2])) 
 
-        y_pred = np.empty((3,29))
+        # y_pred = np.empty((3,29))
 
-        y_pred[0,:] = models.F(df[0].values,*popt_measles)
-        y_pred[1,:] = models.F(df[0].values,*popt_mumps)
-        y_pred[2,:] = models.F(df[0].values,*popt_rubella)
+        # y_pred[0,:] = models.F(df[0].values,*popt_measles)
+        # y_pred[1,:] = models.F(df[0].values,*popt_mumps)
+        # y_pred[2,:] = models.F(df[0].values,*popt_rubella)
 
-        error_measles =  mean_squared_error(df[1].values,y_pred[0,:])
-        error_mumps   =  mean_squared_error(df[2].values,y_pred[1,:])
-        error_rubella =  mean_squared_error(df[3].values,y_pred[2,:])
+        # error_measles =  mean_squared_error(df[1].values,y_pred[0,:])
+        # error_mumps   =  mean_squared_error(df[2].values,y_pred[1,:])
+        # error_rubella =  mean_squared_error(df[3].values,y_pred[2,:])
             
-        print("Mean squared error for Measles:","{:.3e}".format(error_measles))
-        print("Mean squared error for Mumps:","{:.3e}".format(error_mumps))
-        print("Mean squared error for Rubella:","{:.3e}".format(error_rubella))  
+        # print("Mean squared error for Measles:","{:.3e}".format(error_measles))
+        # print("Mean squared error for Mumps:","{:.3e}".format(error_mumps))
+        # print("Mean squared error for Rubella:","{:.3e}".format(error_rubella))  
+
+        print(popt_measles)
+        print(popt_mumps)
+        print(popt_rubella)
+
+        t = np.linspace(df[0].values[0],df[0].values[-1],1000)
+
+        plt.plot(df[0].values,df[1].values,"ko",ms=2)
+        plt.plot(t,models.F(t,*popt_mumps),lw=1)
+        plt.savefig(parent+"/images/farrington.pdf",bbox_inches="tight")
 
     elif problem == 2:
         df = pd.read_table(parent+"/data/osborne2.txt",delimiter=" ",header=None,skiprows=1)
@@ -89,5 +103,5 @@ def main(problem):
         plt.show()    
         print(popt)
 
-main(4)
+main(1)
 

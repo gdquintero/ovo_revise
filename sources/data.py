@@ -54,20 +54,20 @@ samples = len(age)
 # Adding outliers manually
 deviation = 0.5
 
-# sero_measles[16] = deviation
-# sero_measles[17] = deviation
-# sero_measles[18] = deviation
-# sero_measles[19] = deviation
+sero_measles[16] = deviation
+sero_measles[17] = deviation
+sero_measles[18] = deviation
+sero_measles[19] = deviation
 
-# sero_mumps[16] = deviation
-# sero_mumps[17] = deviation
-# sero_mumps[18] = deviation
-# sero_mumps[19] = deviation
+sero_mumps[16] = deviation
+sero_mumps[17] = deviation
+sero_mumps[18] = deviation
+sero_mumps[19] = deviation
 
-# sero_rubella[16] = deviation
-# sero_rubella[17] = deviation
-# sero_rubella[18] = deviation
-# sero_rubella[19] = deviation
+sero_rubella[16] = deviation
+sero_rubella[17] = deviation
+sero_rubella[18] = deviation
+sero_rubella[19] = deviation
 
 age_midpoint = np.empty(samples)
 age_midpoint[:-1] = (age[:-1] + age[1:]) / 2

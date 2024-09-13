@@ -6,7 +6,7 @@
     integer :: allocerr,samples,inf,sup
     real(kind=8) :: fxk,fxtrial,ti,sigma,delta,sigmin,gamma
     real(kind=8), allocatable :: xtrial(:),faux(:),indices(:),nu_l(:),nu_u(:),opt_cond(:),&
-                                 xstar(:),y(:),data(:,:),t(:)
+                                 xstar(:),y(:),data(:,:),t(:),xinit(:,:)
     integer, allocatable :: Idelta(:),outliers(:)
     
     ! LOCAL SCALARS
@@ -36,8 +36,8 @@
 
     n = 4
 
-    allocate(t(samples),y(samples),x(n),xk(n-1),xtrial(n-1),l(n),u(n),xstar(n-1),data(5,samples),&
-    faux(samples),indices(samples),Idelta(samples),nu_l(n-1),nu_u(n-1),opt_cond(n-1),stat=allocerr)
+    allocate(t(samples),y(samples),x(n),xk(n-1),xtrial(n-1),l(n),u(n),xstar(n-1),data(5,samples),faux(samples),&
+    indices(samples),Idelta(samples),nu_l(n-1),nu_u(n-1),opt_cond(n-1),xinit(3,3),stat=allocerr)
 
     if ( allocerr .ne. 0 ) then
         write(*,*) 'Allocation error in main program'
@@ -122,13 +122,21 @@
 
         y(:) = data(2,:)
 
+        Open(Unit = 100, file =trim(pwd)//"/../output/sol_ls_farrington.txt")
+        read(100,*) xinit(1,:)
+        read(100,*) xinit(2,:)
+        read(100,*) xinit(3,:)
+        close(100)
+
+
         do noutliers = out_inf,out_sup
             call cpu_time(start)
             q = samples - noutliers
 
             print*
             write(*,1100) "Number of outliers: ",noutliers
-            xk(:) = (/0.379029d0,0.500859d0,0.016986d0/)
+            ! xk(:) = (/0.379029d0,0.500859d0,0.016986d0/)
+            xk(:) = xinit(1,:)
 
             ind = 1
             
@@ -156,7 +164,8 @@
             q = samples - noutliers
             print*
             write(*,1100) "Number of outliers: ",noutliers
-            xk(:) = (/0.285745d0,0.424520d0,0.005894d0/)
+            ! xk(:) = (/0.285745d0,0.424520d0,0.005894d0/)
+            xk(:) = xinit(2,:)
 
             ind = ind + noutliers
 
@@ -182,7 +191,8 @@
             q = samples - noutliers
             print*
             write(*,1100) "Number of outliers: ",noutliers
-            xk(:) = (/0.117309d0,0.341322d0,0.026605d0/)
+            ! xk(:) = (/0.117309d0,0.341322d0,0.026605d0/)
+            xk(:) = xinit(3,:)
 
             ind = ind + noutliers
 
@@ -225,7 +235,7 @@
         real(kind=8),   intent(inout) :: indices(samples),xtrial(n-1),fovo
         integer,        intent(inout) :: outliers(noutliers),iterations,n_eval
 
-        integer, parameter  :: max_iter = 10000, max_iter_sub = 100, kflag = 2
+        integer, parameter  :: max_iter = 1000, max_iter_sub = 100, kflag = 2
         integer             :: iter,iter_sub,i,j
         real(kind=8)        :: gaux1,gaux2,a,b,c,ebt,terminate,alpha,epsilon
 
