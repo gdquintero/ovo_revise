@@ -7,6 +7,12 @@ import random
 cwd = os.getcwd()
 parent =  os.path.abspath(os.path.join(cwd,os.pardir))
 
+size_img = 0.6
+# plt.rcParams.update({'font.size': 11})
+plt.rcParams['figure.figsize'] = [size_img * 6.4,size_img * 4.8]
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
 def gen_data(m):
     t = np.linspace(-1,3.5,m)
     y = models.andreani(t,*xsol)
@@ -36,7 +42,7 @@ def gen_data(m):
             f.write("%f %f\n" % (t[i],y[i]))
 
     print(noutliers)
-    plt.plot(t,y,"o",ms=2)
+    plt.plot(t,y,"ko",ms=1)
     plt.savefig(parent+"/data/andreani_scaled_data"+str(m)+".pdf",bbox_inches="tight")
     # plt.show()
 
