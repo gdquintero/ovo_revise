@@ -17,6 +17,7 @@ def gen_data(m):
     t = np.linspace(-1,3.5,m)
     y = models.andreani(t,*xsol)
     random.seed(123456)
+    np.random.seed(12)
     r = 0.5
     ind = []
     noutliers = 0
@@ -28,7 +29,6 @@ def gen_data(m):
             noutliers += 1
             ind.append(i+1)
             operacion = np.random.choice([0,1],p=[0.2, 0.8])
-            # r2 = 10 + 5 * random.random()
 
             if operacion == 1:
                 y[i] = random.uniform(y[i],15)
@@ -48,7 +48,7 @@ def gen_data(m):
     # print(noutliers)
     plt.plot(t,y,"ko",ms=1)
     plt.savefig(parent+"/data/andreani_scaled_data"+str(m)+".pdf",bbox_inches="tight")
-    # plt.show()
+    plt.show()
 
 
 xsol = np.array([0,2,-3,1])

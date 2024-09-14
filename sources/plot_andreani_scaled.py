@@ -26,31 +26,26 @@ def plot_fit(n):
     noutliers = df_outliers[0].values[0]
     outliers = np.empty((2,noutliers))
 
-    noutliers_true = df_outliers_true[0].values[0]
-    outliers_true = np.empty((2,noutliers_true))
-
     for i in range(noutliers):
         outliers[0,i] = df_data[0].values[df_outliers[0].values[i+1]-1]
         outliers[1,i] = df_data[1].values[df_outliers[0].values[i+1]-1]
 
-    for i in range(noutliers_true):
-        outliers_true[0,i] = df_data[0].values[df_outliers_true[0].values[i+1]-1]
-        outliers_true[1,i] = df_data[1].values[df_outliers_true[0].values[i+1]-1]
-
     n_data = len(df_data)
 
-    for i in range(n_data):
-        print(df_data[0].values[i])
+    for i in range(1,n_data+1):
+        if i in df_outliers_true[0].values[1:]:
+            plt.plot(df_data[0].values[i-1],df_data[1].values[i-1],"ro",ms=2)
+        else:
+            plt.plot(df_data[0].values[i-1],df_data[1].values[i-1],"ko",ms=2)
+        
 
-    plt.plot(df_data[0].values,df_data[1].values,"ko",ms=2)
-    # plt.plot(outliers[0],outliers[1],'rx',mfc='none',ms=5,mew=1)
-    plt.plot(outliers_true[0],outliers_true[1],'ro',mfc='none',ms=6,mew=1)
+    plt.plot(outliers[0],outliers[1],'ro',mfc='none',ms=5,mew=0.5)
     plt.plot(t,models.andreani(t,*df_sol.values[0]),lw=1)
     plt.tick_params(axis='both',direction='in')
-    plt.xticks(np.arange(-1,3.1,1))
-    plt.yticks(np.arange(-6,12.1,6))
-    plt.ylim(-6.5,13)
-    plt.xlim(-1.1,3.6)
+    # plt.xticks(np.arange(-1,3.1,1))
+    # plt.yticks(np.arange(-6,12.1,6))
+    # plt.ylim(-6.5,13)
+    # plt.xlim(-1.1,3.6)
     plt.savefig(parent+"/images/andreani_fitting"+str(n)+".pdf",bbox_inches = "tight")
     # plt.show()
     plt.close()
