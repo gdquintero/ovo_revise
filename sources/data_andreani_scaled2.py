@@ -53,10 +53,10 @@ xsol = np.array([0,2,-3,1])
 #     gen_data(n)
 
 gen_data(100)
-gen_data(1000)
-gen_data(10000)
-gen_data(100000)
-gen_data(1000000)
+# gen_data(1000)
+# gen_data(10000)
+# gen_data(100000)
+# gen_data(1000000)
 
 
 
