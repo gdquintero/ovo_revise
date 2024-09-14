@@ -16,32 +16,36 @@ plt.rc('font', family='serif')
 def gen_data(m):
     t = np.linspace(-1,3.5,m)
     y = models.andreani(t,*xsol)
-    noutliers = 0
-
     random.seed(123456)
     r = 0.5
+    ind = []
+    noutliers = 0
 
     for i in range(m):
         y[i] = y[i] + random.uniform(-r,r)
-
+        
         if random.random() <= 0.1:
             noutliers += 1
-
+            ind.append(i+1)
             operacion = np.random.choice([0,1],p=[0.2, 0.8])
             # r2 = 10 + 5 * random.random()
 
             if operacion == 1:
                 y[i] = random.uniform(y[i],15)
             else:
-                y[i] = random.uniform(-6,y[i])
-
+                y[i] = random.uniform(-6,y[i])     
+       
+    with open(parent+"/data/outliers_andreani_scaled_true.txt","w") as f:
+        f.write("%i\n" % noutliers)
+        for i in range(noutliers):
+            f.write("%i\n" % ind[i])
 
     with open(parent+"/data/andreani"+str(m)+".txt","w") as f:
         f.write("%i\n" % m)
         for i in range(m):
             f.write("%f %f\n" % (t[i],y[i]))
 
-    print(noutliers)
+    # print(noutliers)
     plt.plot(t,y,"ko",ms=1)
     plt.savefig(parent+"/data/andreani_scaled_data"+str(m)+".pdf",bbox_inches="tight")
     # plt.show()
