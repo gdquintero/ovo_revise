@@ -100,8 +100,8 @@ def main(problem):
 
         plt.plot(df[0].values,df[1].values,"ko",ms=2)
         plt.plot(t,models.andreani(t,*popt),lw=1)
-        plt.show()    
+        # plt.show()    
         print(popt)
 
-main(1)
+main(4)
 

@@ -35,7 +35,7 @@ def gen_data(m):
             else:
                 y[i] = random.uniform(-6,y[i])     
        
-    with open(parent+"/data/outliers_andreani_scaled_true.txt","w") as f:
+    with open(parent+"/data/outliers_andreani_scaled_true"+str(m)+".txt","w") as f:
         f.write("%i\n" % noutliers)
         for i in range(noutliers):
             f.write("%i\n" % ind[i])
@@ -45,18 +45,13 @@ def gen_data(m):
         for i in range(m):
             f.write("%f %f\n" % (t[i],y[i]))
 
-    # print(noutliers)
-    plt.plot(t,y,"ko",ms=1)
-    plt.savefig(parent+"/data/andreani_scaled_data"+str(m)+".pdf",bbox_inches="tight")
-    plt.show()
-
 
 xsol = np.array([0,2,-3,1])
 
-# for n in [100,1000,10000,100000,1000000]:
-#     gen_data(n)
+for n in [100,1000,10000,100000,1000000]:
+    gen_data(n)
 
-gen_data(100)
+# gen_data(100)
 # gen_data(1000)
 # gen_data(10000)
 # gen_data(100000)
