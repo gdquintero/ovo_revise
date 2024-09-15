@@ -42,7 +42,7 @@ def plot_fit(n):
             plt.plot(df_data[0].values[i-1],df_data[1].values[i-1],"ko",ms=0.1)
         
 
-    plt.plot(outliers[0],outliers[1],'ro',mfc='none',ms=2,mew=0.2)
+    plt.plot(outliers[0],outliers[1],'go',mfc='none',ms=2,mew=0.2)
     plt.plot(t,models.andreani(t,*df_sol.values[0]),lw=1,label="OVO")
     plt.plot(t,models.andreani(t,*df_sol_ls[0].values),lw=1,label="LS")
     plt.tick_params(axis='both',direction='in')
@@ -114,6 +114,6 @@ def plot_log(n):
 # for n in [100,1000,10000,100000,1000000]:
 #     plot_log(n)
 
-plot_fit(10000)
+plot_fit(100000)
 # plot_log(10000)
 
