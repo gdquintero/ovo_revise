@@ -29,7 +29,7 @@
     call get_environment_variable('PWD',pwd)
 
     ! Reading data and storing it in the variables t and y
-    Open(Unit = 100, File = trim(pwd)//"/../data/andreani100000.txt", ACCESS = "SEQUENTIAL")
+    Open(Unit = 100, File = trim(pwd)//"/../data/andreani1000000.txt", ACCESS = "SEQUENTIAL")
 
     ! Set parameters
     read(100,*) samples
@@ -99,7 +99,7 @@
         
     outliers(:) = 0
 
-    Open(Unit = 100, file =trim(pwd)//"/../output/sol_ls_andreani100000.txt")
+    Open(Unit = 100, file =trim(pwd)//"/../output/sol_ls_andreani1000000.txt")
 
     do i = 1,4
         read(100,*) xinit(i)
@@ -110,7 +110,7 @@
     xk(:) = xinit(:)
 
     seed = 123456.0d0
-    ntrials = 100
+    ntrials = 1000
     fovo_best = huge(1.0d0)
     inf = -5.0d0
     sup = 5.0d0
