@@ -5,11 +5,11 @@ export ALGENCAN=/opt/algencan-3.1.1
 rm -f andreani_scaled
 gfortran -O3 -w -fcheck=all -g andreani_scaled.f90 -L$ALGENCAN/lib -lalgencan -lhsl sort.o subset.o -o andreani_scaled
 
-delta=1.0d-1
+delta=1.0d-3
 sigmin=1.0d-1
 gamma=5.d0
 
-for ((noutliers=50000; noutliers<=150000; noutliers+=1000))
+for ((noutliers=100083; noutliers<=100083; noutliers+=1))
   do
     echo $delta $sigmin $gamma $noutliers  > param.txt
     ./andreani_scaled >> salida.txt
