@@ -3,9 +3,9 @@
 
     implicit none 
     
-    integer :: allocerr,samples,noutliers,q,iterations,n_eval,ntrials,itrial
+    integer :: allocerr,samples,noutliers,q,iterations,n_eval,ntrials,itrial,kf
     real(kind=8) :: fxk,fxtrial,ti,sigma,seed,fovo_best,inf,sup,part_time,fovo,delta,&
-    sigmin,gamma,start,finish,init_time,end_time,total_time
+    sigmin,gamma,start,finish,init_time,end_time,total_time,fls
     real(kind=8), allocatable :: xtrial(:),faux(:),indices(:),nu_l(:),nu_u(:),opt_cond(:),&
                                  xinit(:),y(:),data(:,:),t(:),xbest(:)
     integer, allocatable :: Idelta(:),outliers(:),outliers_best(:)
@@ -109,8 +109,19 @@
 
     xk(:) = xinit(:)
 
+    indices(:) = (/(i, i = 1, samples)/)
+    kf = 2
+    
+    do i = 1, samples
+        call fi(xk,i,n,t,y,samples,faux(i))
+    end do
+
+    call DSORT(faux,indices,samples,kf)
+
+    fls = faux(q)
+
     seed = 123456.0d0
-    ntrials = 1000
+    ntrials = 100
     fovo_best = huge(1.0d0)
     inf = -5.0d0
     sup = 5.0d0
@@ -151,9 +162,10 @@
     outliers = outliers_best
     fovo = fovo_best
 
-    write(*,100) "esta", noutliers,"&",fovo,"&",iterations,"&",n_eval,"&",part_time,"&",&
+    write(*,100) "esta", noutliers,"&",fovo,"&",fls,"&",iterations,"&",n_eval,"&",part_time,"&",&
     part_time/iterations,"&",part_time/n_eval,"&",total_time,"\\"
-    100 format (A5,1X,I7,1X,A1,1X,ES10.3,1X,A1,1X,I3,1X,A1,1X,I4,1X,A1,1X,ES10.3,1X,A1,1X,&
+
+    100 format (A5,1X,I7,1X,A1,1X,ES10.3,1X,A1,1X,ES10.3,1X,A1,1X,I3,1X,A1,1X,I4,1X,A1,1X,ES10.3,1X,A1,1X,&
     ES10.3,1X,A1,1X,ES10.3,1X,A1,1X,ES10.3,1X,A2)
 
     write(*,101) "plot",noutliers,fovo
@@ -204,8 +216,7 @@
             ! write(*,*) i, faux(i)
         end do
 
-        
-    
+
         ! Sorting
         call DSORT(faux,indices,samples,kflag)
 
