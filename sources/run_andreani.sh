@@ -5,11 +5,11 @@ export ALGENCAN=/opt/algencan-3.1.1
 rm -f andreani
 gfortran -O3 -w -fcheck=all -g andreani.f90 -L$ALGENCAN/lib -lalgencan -lhsl sort.o subset.o -o andreani
 
-delta=1.0d-1
+delta=1.0d-2
 sigmin=1.0d-1
 gamma=5.d0
 
-for noutliers in {4..4}
+for ((noutliers=10; noutliers<=10; noutliers+=1))
   do
     echo $delta $sigmin $gamma $noutliers  > param.txt
     ./andreani >> salida.txt

@@ -1,4 +1,4 @@
- Program osborne2
+ Program andreani
     use sort
 
     implicit none 
@@ -152,7 +152,6 @@
     ! print*, "Solucion", xk
 
 
-
     Open(Unit = 98, File = trim(pwd)//"/../output/solution_andreani.txt", ACCESS = "SEQUENTIAL")
     write(98,"(11F7.3)") xk(1),xk(2),xk(3),xk(4)
 
@@ -198,8 +197,6 @@
             ! write(*,*) i, faux(i)
         end do
 
-        
-    
         ! Sorting
         call DSORT(faux,indices,samples,kflag)
 
@@ -700,4 +697,4 @@
         flag = - 1
 
     end subroutine myevalhlp
-end Program osborne2
+end Program andreani
