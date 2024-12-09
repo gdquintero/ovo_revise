@@ -18,6 +18,11 @@ y = np.array([
 
 sup = 6.4
 
+told = np.linspace(0,sup,len(y))
+
+plt.plot(told,y,"ko")
+
+
 y = np.insert(y,4,1.418)
 y = np.insert(y,9,1.146)
 y = np.insert(y,15,1.132)
@@ -36,10 +41,31 @@ y = np.insert(y,70,1.148)
 samples = len(y)
 t = np.linspace(0,sup,samples)
 
+plt.plot(t[4],y[4],"ro")
+plt.plot(t[9],y[9],"ro")
+plt.plot(t[15],y[15],"ro")
+plt.plot(t[20],y[20],"ro")
+plt.plot(t[22],y[22],"ro")
+plt.plot(t[24],y[24],"ro")
+plt.plot(t[33],y[33],"ro")
+plt.plot(t[40],y[40],"ro")
+plt.plot(t[42],y[42],"ro")
+plt.plot(t[46],y[46],"ro")
+plt.plot(t[47],y[47],"ro")
+plt.plot(t[67],y[67],"ro")
+plt.plot(t[70],y[70],"ro")
+
+plt.xticks([])
+plt.yticks([])
+
+plt.savefig(parent+"/images/osborne-data.pdf",bbox_inches="tight")
+
+
+
 with open(parent+"/data/osborne2.txt","w") as f:
     f.write("%i\n" % samples)
     for i in range(samples):
         f.write("%f %f\n" % (t[i],y[i]))
 
-plt.plot(t,y,"o")
-plt.show()
+# plt.plot(t,y,"o")
+# plt.show()
